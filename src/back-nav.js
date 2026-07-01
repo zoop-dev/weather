@@ -17,7 +17,6 @@ export function pushOverlay(closeFn) {
 
 export function popOverlay() {
   if (!stack.length) return
-  stack.pop()
   history.back()
 }
 
