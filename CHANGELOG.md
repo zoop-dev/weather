@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.2 — 2026-07-01
+
+- Locations menu slides in from the left instead of fading in
+- Swapped several custom buttons/lists for real M3 components (list items, filled buttons)
+- Removed the storm icon pulse animation (too distracting in forecast rows)
+- Desktop usage warning banner (app is built for mobile)
+- Production build now uses Terser for minification
+
+## 0.1.1 — 2026-07-01
+
+- Fixed broken PNG icon exports (were rendering as solid black)
+- Added in-app changelog dialog
+
 ## 0.1.0 — 2026-07-01
 
 Initial release.

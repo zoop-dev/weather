@@ -33,20 +33,21 @@ export function initInstallGate() {
       <md-icon class="icon-outline">sunny</md-icon>
     </div>
     <h1 class="install-gate-title">Weather</h1>
-    <p class="install-gate-sub">This works best installed on your home screen — full screen, offline-friendly, no browser chrome.</p>
-    <button type="button" id="install-gate-btn" class="install-gate-cta" hidden>
-      Install app <md-icon>download</md-icon>
-    </button>
+    <p class="install-gate-sub">works way better installed. full screen, works offline, no browser junk around it.</p>
+    <md-filled-button type="button" id="install-gate-btn" class="install-gate-cta" hidden>
+      Install app
+      <md-icon slot="icon">download</md-icon>
+    </md-filled-button>
     <div class="install-gate-steps">
       ${
         isIOS()
           ? `
-        <div class="install-gate-step"><md-icon>ios_share</md-icon><span>Tap the <b>Share</b> icon in Safari's toolbar</span></div>
-        <div class="install-gate-step"><md-icon>add_box</md-icon><span>Choose <b>Add to Home Screen</b></span></div>
+        <div class="install-gate-step"><md-icon>ios_share</md-icon><span>hit the <b>Share</b> button in safari</span></div>
+        <div class="install-gate-step"><md-icon>add_box</md-icon><span>then <b>Add to Home Screen</b></span></div>
       `
           : `
-        <div class="install-gate-step"><md-icon>more_vert</md-icon><span>Open your browser menu (⋮)</span></div>
-        <div class="install-gate-step"><md-icon>install_mobile</md-icon><span>Tap <b>Install app</b> or <b>Add to Home screen</b></span></div>
+        <div class="install-gate-step"><md-icon>more_vert</md-icon><span>open the browser menu (⋮)</span></div>
+        <div class="install-gate-step"><md-icon>install_mobile</md-icon><span>tap <b>Install app</b> (or <b>Add to Home screen</b>)</span></div>
       `
       }
     </div>

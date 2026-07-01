@@ -8,14 +8,24 @@ import '@material/web/tabs/primary-tab.js'
 import '@material/web/elevation/elevation.js'
 import '@material/web/icon/icon.js'
 import '@material/web/fab/fab.js'
+import '@material/web/dialog/dialog.js'
+import '@material/web/list/list.js'
+import '@material/web/list/list-item.js'
+import '@material/web/button/text-button.js'
+import '@material/web/button/filled-button.js'
 import { describe, THEMES } from './weathercodes.js'
 import { weatherIcon } from './icons.js'
 import { initBackground, setBackgroundCondition } from './background.js'
 import { scallopedClipPath } from './shapes.js'
 import { initInstallGate } from './install-gate.js'
+import { initDesktopWarning } from './desktop-warning.js'
+import { APP_VERSION, CHANGELOG } from './changelog.js'
 
 const gated = initInstallGate()
-if (!gated) initBackground()
+if (!gated) {
+  initBackground()
+  initDesktopWarning()
+}
 
 const GEOCODE_URL = 'https://geocoding-api.open-meteo.com/v1/search'
 const FORECAST_URL = 'https://api.open-meteo.com/v1/forecast'
@@ -23,6 +33,7 @@ const AQI_URL = 'https://air-quality-api.open-meteo.com/v1/air-quality'
 const LAST_KEY = 'weather:last'
 const LOCATIONS_KEY = 'weather:locations'
 const ONBOARDED_KEY = 'weather:onboarded'
+const VERSION_KEY = 'weather:version'
 
 const mi = (name) => `<md-icon>${name}</md-icon>`
 
@@ -63,15 +74,16 @@ app.innerHTML = `
       <md-icon class="icon-outline">sunny</md-icon>
     </div>
     <h1 class="onboarding-title">Weather</h1>
-    <p class="onboarding-sub">A clean, fast forecast — search any city, track a few favorites, and see it all at a glance.</p>
+    <p class="onboarding-sub">made this cause every weather app is sad :(.</p>
     <div class="onboarding-steps">
-      <div class="onboarding-step"><md-icon>search</md-icon><span>Search any city worldwide</span></div>
-      <div class="onboarding-step"><md-icon>bookmark</md-icon><span>Save your favorite locations</span></div>
-      <div class="onboarding-step"><md-icon>air</md-icon><span>Hourly, daily, wind &amp; air quality</span></div>
+      <div class="onboarding-step"><md-icon>search</md-icon><span>search literally any city</span></div>
+      <div class="onboarding-step"><md-icon>bookmark</md-icon><span>save the ones you actually check</span></div>
+      <div class="onboarding-step"><md-icon>air</md-icon><span>hourly, daily, wind, air quality, all in one place</span></div>
     </div>
-    <button type="button" class="onboarding-cta" id="onboarding-cta">
-      Get started <md-icon>arrow_forward</md-icon>
-    </button>
+    <md-filled-button type="button" class="onboarding-cta" id="onboarding-cta">
+      Get started
+      <md-icon slot="icon">arrow_forward</md-icon>
+    </md-filled-button>
   </div>
 
   <div class="search-overlay" id="locations-overlay">
@@ -100,6 +112,14 @@ app.innerHTML = `
     <div class="search-results" id="search-results"></div>
     <p class="search-attribution">Location results by Open-Meteo (CC BY 4.0) · GeoNames</p>
   </div>
+
+  <md-dialog id="changelog-dialog" class="changelog-dialog">
+    <div slot="headline">What's new</div>
+    <div slot="content" id="changelog-content"></div>
+    <div slot="actions">
+      <md-text-button id="changelog-close">Got it</md-text-button>
+    </div>
+  </md-dialog>
 `
 
 const contentEl = document.querySelector('#content')
@@ -139,6 +159,42 @@ function maybeShowOnboarding() {
   } else {
     onboardingEl.remove()
   }
+}
+
+function maybeShowChangelog() {
+  const lastSeen = localStorage.getItem(VERSION_KEY)
+  const isFirstRun = !localStorage.getItem(ONBOARDED_KEY) && loadLocations().length === 0
+
+  if (lastSeen === APP_VERSION || isFirstRun) {
+    localStorage.setItem(VERSION_KEY, APP_VERSION)
+    return
+  }
+
+  const entries = lastSeen ? CHANGELOG.filter((c) => c.version > lastSeen) : [CHANGELOG[0]]
+  const contentEl = document.querySelector('#changelog-content')
+  contentEl.innerHTML = entries
+    .map(
+      (entry) => `
+        <div class="changelog-entry">
+          <div class="changelog-version">v${entry.version} <span>${entry.date}</span></div>
+          <md-list>
+            ${entry.items.map((item) => `<md-list-item>${item}</md-list-item>`).join('')}
+          </md-list>
+        </div>
+      `
+    )
+    .join('')
+
+  const dialog = document.querySelector('#changelog-dialog')
+  dialog.show()
+  document.querySelector('#changelog-close').addEventListener(
+    'click',
+    () => {
+      dialog.close()
+      localStorage.setItem(VERSION_KEY, APP_VERSION)
+    },
+    { once: true }
+  )
 }
 
 let debounceTimer = null
@@ -184,23 +240,25 @@ function renderResults(matches) {
     resultsEl.innerHTML = `<div class="empty"><md-icon>location_off</md-icon><span>No matches found</span></div>`
     return
   }
-  resultsEl.innerHTML = matches
-    .map((m, i) => {
-      const sub = [m.admin1, m.country].filter(Boolean).join(', ')
-      return `
-        <button type="button" data-i="${i}" style="animation-delay:${i * 0.03}s">
-          <md-icon>location_on</md-icon>
-          <span class="result-text">
-            <span class="result-main">${m.name}</span>
-            ${sub ? `<span class="result-sub">${sub}</span>` : ''}
-          </span>
-        </button>
-      `
-    })
-    .join('')
-  resultsEl.querySelectorAll('button').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const m = matches[Number(btn.dataset.i)]
+  resultsEl.innerHTML = `
+    <md-list>
+      ${matches
+        .map((m, i) => {
+          const sub = [m.admin1, m.country].filter(Boolean).join(', ')
+          return `
+            <md-list-item type="button" data-i="${i}" style="animation-delay:${i * 0.03}s">
+              <md-icon slot="start">location_on</md-icon>
+              <div slot="headline">${m.name}</div>
+              ${sub ? `<div slot="supporting-text">${sub}</div>` : ''}
+            </md-list-item>
+          `
+        })
+        .join('')}
+    </md-list>
+  `
+  resultsEl.querySelectorAll('md-list-item').forEach((item) => {
+    item.addEventListener('click', () => {
+      const m = matches[Number(item.dataset.i)]
       closeOverlay()
       selectPlace(m)
     })
@@ -277,22 +335,24 @@ function renderLocationsList() {
     return
   }
 
-  locationsListEl.innerHTML = list
-    .map((loc, i) => {
-      const cur = loc.data.current
-      const { icon, label } = describe(cur.weather_code, cur.is_day)
-      const isActive = placeKey(loc.place) === current
-      return `
-        <button type="button" class="location-pill${isActive ? ' active' : ''}" data-i="${i}">
-          <div class="wicon-wrap">${weatherIcon(icon)}</div>
-          <span class="result-text">
-            <span class="result-main">${loc.place.name}</span>
-            <span class="result-sub">${label}</span>
-          </span>
-        </button>
-      `
-    })
-    .join('')
+  locationsListEl.innerHTML = `
+    <md-list>
+      ${list
+        .map((loc, i) => {
+          const cur = loc.data.current
+          const { icon, label } = describe(cur.weather_code, cur.is_day)
+          const isActive = placeKey(loc.place) === current
+          return `
+            <md-list-item type="button" class="location-pill${isActive ? ' active' : ''}" data-i="${i}">
+              <div slot="start" class="wicon-wrap">${weatherIcon(icon)}</div>
+              <div slot="headline">${loc.place.name}</div>
+              <div slot="supporting-text">${label}</div>
+            </md-list-item>
+          `
+        })
+        .join('')}
+    </md-list>
+  `
 
   locationsListEl.querySelectorAll('.location-pill').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -413,6 +473,7 @@ function render({ place, data, savedAt }, cached = false) {
       <div class="hourly-scroll" id="hourly-body">${renderHourly(data, hourlyMode)}</div>
     </div>
     <div class="dgrid">${details}</div>
+    <p class="app-version">v${APP_VERSION}</p>
   `
 
   wireTabs()
@@ -888,6 +949,7 @@ if (gated) {
 } else {
   loadLast()
   maybeShowOnboarding()
+  maybeShowChangelog()
 
   ;(function bootSequence() {
     const pctEl = document.querySelector('#boot-pct-num')
