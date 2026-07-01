@@ -77,8 +77,8 @@ app.innerHTML = `
     <div class="onboarding-icon">
       <md-icon class="icon-outline">sunny</md-icon>
     </div>
-    <h1 class="onboarding-title">Weather</h1>
-    <p class="onboarding-sub">made this cause every weather app is sad :(.</p>
+    <h1 class="onboarding-title">Weatherly</h1>
+    <p class="onboarding-sub">made this cause every weather app is sad :(. privacy-focused, no permissions needed — no location, camera, mic, or notifications required.</p>
     <div class="onboarding-steps">
       <div class="onboarding-step"><md-icon>search</md-icon><span>search literally any city</span></div>
       <div class="onboarding-step"><md-icon>bookmark</md-icon><span>save the ones you actually check</span></div>
@@ -99,7 +99,7 @@ app.innerHTML = `
       <span class="overlay-spacer"></span>
     </div>
     <div class="locations-list" id="locations-list"></div>
-    <md-fab id="settings-fab" aria-label="Settings" size="small">
+    <md-fab id="settings-fab" aria-label="Settings">
       <md-icon slot="icon">settings</md-icon>
     </md-fab>
     <md-fab id="add-location-fab" aria-label="Add a location">
@@ -118,7 +118,7 @@ app.innerHTML = `
         </md-list-item>
         <md-list-item type="button" id="settings-changelog">
           <md-icon slot="start">campaign</md-icon>
-          <div slot="headline">What's new</div>
+          <div slot="headline">Changelog</div>
         </md-list-item>
         <md-list-item type="button" id="settings-refresh-all">
           <md-icon slot="start">sync</md-icon>
@@ -234,6 +234,14 @@ function maybeShowChangelog() {
   const entries = lastSeen
     ? CHANGELOG.filter((c) => compareVersions(c.version, lastSeen) > 0)
     : [CHANGELOG[0]]
+  showChangelogDialog(entries, () => localStorage.setItem(VERSION_KEY, APP_VERSION))
+}
+
+function showFullChangelog() {
+  showChangelogDialog(CHANGELOG)
+}
+
+function showChangelogDialog(entries, onClose) {
   const contentEl = document.querySelector('#changelog-content')
   contentEl.innerHTML = entries
     .map(
@@ -254,7 +262,7 @@ function maybeShowChangelog() {
     'click',
     () => {
       dialog.close()
-      localStorage.setItem(VERSION_KEY, APP_VERSION)
+      if (onClose) onClose()
     },
     { once: true }
   )
@@ -285,15 +293,20 @@ document.querySelector('#settings-close').addEventListener('click', () => {
 document.querySelector('#settings-check-update').addEventListener('click', async (e) => {
   const item = e.currentTarget
   item.classList.add('spinning')
-  const found = await checkForUpdate()
+  let found = false
+  try {
+    found = await checkForUpdate()
+  } catch {
+    // treat a failed check the same as "nothing new" rather than hanging
+  }
   setTimeout(() => item.classList.remove('spinning'), 600)
+  settingsDialog.close()
   if (!found) showToast("you're on the latest version")
 })
 
 document.querySelector('#settings-changelog').addEventListener('click', () => {
   settingsDialog.close()
-  localStorage.removeItem(VERSION_KEY)
-  maybeShowChangelog()
+  showFullChangelog()
 })
 
 document.querySelector('#settings-refresh-all').addEventListener('click', async (e) => {

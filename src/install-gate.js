@@ -32,8 +32,8 @@ export function initInstallGate() {
     <div class="install-gate-icon">
       <md-icon class="icon-outline">sunny</md-icon>
     </div>
-    <h1 class="install-gate-title">Weather</h1>
-    <p class="install-gate-sub">works way better installed. full screen, works offline, no browser junk around it.</p>
+    <h1 class="install-gate-title">Weatherly</h1>
+    <p class="install-gate-sub">works way better installed. full screen, works offline, no browser junk around it. privacy-focused — no location, camera, mic, or notification permissions needed.</p>
     <md-filled-button type="button" id="install-gate-btn" class="install-gate-cta" hidden>
       Install app
       <md-icon slot="icon">download</md-icon>

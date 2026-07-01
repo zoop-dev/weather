@@ -1,6 +1,17 @@
-export const APP_VERSION = '0.1.5'
+export const APP_VERSION = '0.1.6'
 
 export const CHANGELOG = [
+  {
+    version: '0.1.6',
+    date: '2026-07-01',
+    items: [
+      'renamed the app to weatherly',
+      'onboarding + install screen now say its privacy-focused, no permissions needed',
+      'changelog button in settings now shows full version history, not just whats new',
+      'settings gear button is the same size as the add-location one now, and more purple',
+      'fixed the "latest version" toast being hidden behind the settings dialog',
+    ],
+  },
   {
     version: '0.1.5',
     date: '2026-07-01',

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.6 — 2026-07-01
+
+- Renamed the app to Weatherly
+- Onboarding and install screens now mention it's privacy-focused with no permissions required
+- Changelog button in Settings now shows the full version history, not just what's new
+- Settings gear button matches the add-location button's size, recolored to purple
+- Fixed the "you're on the latest version" toast being hidden behind the still-open Settings dialog
+
 ## 0.1.5 — 2026-07-01
 
 - Rewrote detail page explainer text, added reference scales for wind (Beaufort), air quality, UV index, and visibility

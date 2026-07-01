@@ -1,7 +1,7 @@
 {
-  "name": "Weather",
-  "short_name": "Weather",
-  "description": "Search and save cities, get a clean forecast with hourly, daily, wind, and air quality views.",
+  "name": "Weatherly",
+  "short_name": "Weatherly",
+  "description": "Search and save cities, get a clean forecast with hourly, daily, wind, and air quality views. Privacy-focused — no permissions required.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
