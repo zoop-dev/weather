@@ -188,15 +188,13 @@ body {
 .location-pill .wicon-wrap {
   font-size: 32px;
   line-height: 1;
+  flex-shrink: 0;
 }
 
-.location-pill.active {
-  background: rgba(120, 130, 220, 0.28);
-}
-
-.location-pill .wicon-wrap {
-  font-size: 32px;
-  line-height: 1;
+.location-delete {
+  --md-icon-button-icon-size: 20px;
+  --md-icon-button-state-layer-color: #ff6a6a;
+  color: var(--muted);
   flex-shrink: 0;
 }
 
@@ -601,6 +599,23 @@ body {
   padding: 8px;
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+
+.pull-refresh {
+  position: fixed;
+  top: max(6px, env(safe-area-inset-top));
+  left: 50%;
+  transform: translateY(0) translateX(-50%);
+  z-index: 70;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.pull-refresh md-circular-progress {
+  --md-circular-progress-active-indicator-color: #4cc9ff;
+  width: 32px;
+  height: 32px;
 }
 
 .desktop-warning {

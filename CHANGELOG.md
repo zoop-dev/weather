@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.3 — 2026-07-01
+
+- Delete saved locations from the Locations menu
+- Pull-to-refresh on the weather screen
+
 ## 0.1.2 — 2026-07-01
 
 - Locations menu slides in from the left instead of fading in

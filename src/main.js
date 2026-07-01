@@ -13,12 +13,14 @@ import '@material/web/list/list.js'
 import '@material/web/list/list-item.js'
 import '@material/web/button/text-button.js'
 import '@material/web/button/filled-button.js'
+import '@material/web/progress/circular-progress.js'
 import { describe, THEMES } from './weathercodes.js'
 import { weatherIcon } from './icons.js'
 import { initBackground, setBackgroundCondition } from './background.js'
 import { scallopedClipPath } from './shapes.js'
 import { initInstallGate } from './install-gate.js'
 import { initDesktopWarning } from './desktop-warning.js'
+import { initPullToRefresh } from './pull-refresh.js'
 import { APP_VERSION, CHANGELOG } from './changelog.js'
 
 const gated = initInstallGate()
@@ -326,6 +328,24 @@ function upsertLocation(payload) {
   saveLocations(list)
 }
 
+function removeLocation(place) {
+  const key = placeKey(place)
+  const list = loadLocations().filter((l) => placeKey(l.place) !== key)
+  saveLocations(list)
+
+  const lastRaw = localStorage.getItem(LAST_KEY)
+  if (lastRaw && placeKey(JSON.parse(lastRaw).place) === key) {
+    if (list.length) {
+      localStorage.setItem(LAST_KEY, JSON.stringify(list[0]))
+      render(list[0])
+    } else {
+      localStorage.removeItem(LAST_KEY)
+      locName.textContent = 'Weather'
+      showStatus('Search a city to get started.')
+    }
+  }
+}
+
 function renderLocationsList() {
   const list = loadLocations()
   const current = currentPlace ? placeKey(currentPlace) : null
@@ -347,12 +367,24 @@ function renderLocationsList() {
               <div slot="start" class="wicon-wrap">${weatherIcon(icon)}</div>
               <div slot="headline">${loc.place.name}</div>
               <div slot="supporting-text">${label}</div>
+              <md-icon-button slot="end" class="location-delete" data-i="${i}" aria-label="Remove ${loc.place.name}">
+                <md-icon>delete</md-icon>
+              </md-icon-button>
             </md-list-item>
           `
         })
         .join('')}
     </md-list>
   `
+
+  locationsListEl.querySelectorAll('.location-delete').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation()
+      const loc = list[Number(btn.dataset.i)]
+      removeLocation(loc.place)
+      renderLocationsList()
+    })
+  })
 
   locationsListEl.querySelectorAll('.location-pill').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -950,6 +982,19 @@ if (gated) {
   loadLast()
   maybeShowOnboarding()
   maybeShowChangelog()
+
+  initPullToRefresh(contentEl, async () => {
+    if (!currentPlace) return
+    try {
+      const data = await fetchForecast(currentPlace)
+      const payload = { place: currentPlace, data, savedAt: Date.now() }
+      localStorage.setItem(LAST_KEY, JSON.stringify(payload))
+      upsertLocation(payload)
+      render(payload)
+    } catch {
+      // stay on whatever's currently shown
+    }
+  })
 
   ;(function bootSequence() {
     const pctEl = document.querySelector('#boot-pct-num')

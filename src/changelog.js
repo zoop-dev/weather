@@ -1,6 +1,14 @@
-export const APP_VERSION = '0.1.2'
+export const APP_VERSION = '0.1.3'
 
 export const CHANGELOG = [
+  {
+    version: '0.1.3',
+    date: '2026-07-01',
+    items: [
+      'you can delete saved locations now',
+      'pull down to refresh the weather',
+    ],
+  },
   {
     version: '0.1.2',
     date: '2026-07-01',
