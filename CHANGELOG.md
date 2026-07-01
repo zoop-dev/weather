@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.4 — 2026-07-01
+
+- Fixed "Updated just now" showing even when data was old
+- Pull-to-refresh spinner now has a proper dark background behind it
+- Skeleton loading state while a new location's forecast loads
+- Fixed changelog version-comparison logic (was naive string comparison)
+
 ## 0.1.3 — 2026-07-01
 
 - Delete saved locations from the Locations menu

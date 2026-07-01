@@ -163,6 +163,16 @@ function maybeShowOnboarding() {
   }
 }
 
+function compareVersions(a, b) {
+  const pa = a.split('.').map(Number)
+  const pb = b.split('.').map(Number)
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const diff = (pa[i] || 0) - (pb[i] || 0)
+    if (diff !== 0) return diff
+  }
+  return 0
+}
+
 function maybeShowChangelog() {
   const lastSeen = localStorage.getItem(VERSION_KEY)
   const isFirstRun = !localStorage.getItem(ONBOARDED_KEY) && loadLocations().length === 0
@@ -172,7 +182,9 @@ function maybeShowChangelog() {
     return
   }
 
-  const entries = lastSeen ? CHANGELOG.filter((c) => c.version > lastSeen) : [CHANGELOG[0]]
+  const entries = lastSeen
+    ? CHANGELOG.filter((c) => compareVersions(c.version, lastSeen) > 0)
+    : [CHANGELOG[0]]
   const contentEl = document.querySelector('#changelog-content')
   contentEl.innerHTML = entries
     .map(
@@ -283,9 +295,28 @@ function placeLabel(p) {
   return [p.name, p.admin1, p.country].filter(Boolean).join(', ')
 }
 
+function showSkeleton() {
+  contentEl.innerHTML = `
+    <div class="skeleton">
+      <div class="skel skel-icon"></div>
+      <div class="skel skel-temp"></div>
+      <div class="skel skel-line" style="width:50%"></div>
+      <div class="skel skel-panel"></div>
+      <div class="skel skel-panel"></div>
+      <div class="skel-grid">
+        <div class="skel skel-card"></div>
+        <div class="skel skel-card"></div>
+        <div class="skel skel-card"></div>
+        <div class="skel skel-card"></div>
+      </div>
+    </div>
+  `
+}
+
 async function selectPlace(place) {
   locName.textContent = place.name
   locUpdated.textContent = 'Loading…'
+  showSkeleton()
   try {
     const data = await fetchForecast(place)
     const payload = { place, data, savedAt: Date.now() }
@@ -390,8 +421,9 @@ function renderLocationsList() {
     btn.addEventListener('click', () => {
       const loc = list[Number(btn.dataset.i)]
       locationsOverlay.classList.remove('open')
-      localStorage.setItem(LAST_KEY, JSON.stringify(loc))
-      render(loc, false)
+      locName.textContent = loc.place.name
+      locUpdated.textContent = 'Loading…'
+      showSkeleton()
       fetchForecast(loc.place)
         .then((data) => {
           const payload = { place: loc.place, data, savedAt: Date.now() }
@@ -399,7 +431,9 @@ function renderLocationsList() {
           upsertLocation(payload)
           render(payload)
         })
-        .catch(() => {})
+        .catch(() => {
+          render(loc, true)
+        })
     })
   })
 }
@@ -469,7 +503,7 @@ function render({ place, data, savedAt }, cached = false) {
   locName.textContent = place.name
   locUpdated.innerHTML = cached
     ? `<span class="cached-tag">cached · ${timeAgo(savedAt)}</span>`
-    : 'Updated just now'
+    : `Updated ${timeAgo(savedAt)}`
 
   const todayMax = Math.round(data.daily.temperature_2m_max[0])
   const todayMin = Math.round(data.daily.temperature_2m_min[0])

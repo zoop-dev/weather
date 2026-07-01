@@ -1,6 +1,16 @@
-export const APP_VERSION = '0.1.3'
+export const APP_VERSION = '0.1.4'
 
 export const CHANGELOG = [
+  {
+    version: '0.1.4',
+    date: '2026-07-01',
+    items: [
+      'fixed "updated just now" always showing even when it wasnt just now',
+      'pull to refresh has a proper dark background behind the spinner',
+      'skeleton loading screen while a new location loads instead of a stale placeholder',
+      'whats new popup version check is actually correct now',
+    ],
+  },
   {
     version: '0.1.3',
     date: '2026-07-01',
