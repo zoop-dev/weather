@@ -21,6 +21,8 @@ import { scallopedClipPath } from './shapes.js'
 import { initInstallGate } from './install-gate.js'
 import { initDesktopWarning } from './desktop-warning.js'
 import { initPullToRefresh } from './pull-refresh.js'
+import { initUpdateCheck, checkForUpdate } from './update-check.js'
+import { openDetailPage } from './detail-page.js'
 import { APP_VERSION, CHANGELOG } from './changelog.js'
 
 const gated = initInstallGate()
@@ -97,10 +99,57 @@ app.innerHTML = `
       <span class="overlay-spacer"></span>
     </div>
     <div class="locations-list" id="locations-list"></div>
+    <md-fab id="settings-fab" aria-label="Settings" size="small">
+      <md-icon slot="icon">settings</md-icon>
+    </md-fab>
     <md-fab id="add-location-fab" aria-label="Add a location">
       <md-icon slot="icon">add</md-icon>
     </md-fab>
   </div>
+
+  <md-dialog id="settings-dialog" class="settings-dialog">
+    <div slot="headline">Settings</div>
+    <div slot="content">
+      <md-list>
+        <md-list-item type="button" id="settings-check-update">
+          <md-icon slot="start">refresh</md-icon>
+          <div slot="headline">Check for updates</div>
+          <div slot="supporting-text">v${APP_VERSION}</div>
+        </md-list-item>
+        <md-list-item type="button" id="settings-changelog">
+          <md-icon slot="start">campaign</md-icon>
+          <div slot="headline">What's new</div>
+        </md-list-item>
+        <md-list-item type="button" id="settings-refresh-all">
+          <md-icon slot="start">sync</md-icon>
+          <div slot="headline">Refresh all weather</div>
+          <div slot="supporting-text">re-fetch every saved location</div>
+        </md-list-item>
+        <md-list-item type="button" id="settings-github">
+          <md-icon slot="start">code</md-icon>
+          <div slot="headline">View source</div>
+          <div slot="supporting-text">github.com/zoop-dev/weather</div>
+        </md-list-item>
+        <md-list-item type="button" id="settings-clear-data">
+          <md-icon slot="start">delete_sweep</md-icon>
+          <div slot="headline">Clear all data</div>
+          <div slot="supporting-text">removes every saved location</div>
+        </md-list-item>
+      </md-list>
+    </div>
+    <div slot="actions">
+      <md-text-button id="settings-close">Close</md-text-button>
+    </div>
+  </md-dialog>
+
+  <md-dialog id="clear-data-confirm">
+    <div slot="headline">Clear all data?</div>
+    <div slot="content">this removes every saved location and resets the app. cant be undone.</div>
+    <div slot="actions">
+      <md-text-button id="clear-data-cancel">Cancel</md-text-button>
+      <md-text-button id="clear-data-confirm-btn">Clear</md-text-button>
+    </div>
+  </md-dialog>
 
   <div class="search-overlay" id="search-overlay">
     <div class="plain-search-row">
@@ -221,6 +270,89 @@ menuBtn.addEventListener('click', () => {
 locationsBackBtn.addEventListener('click', () => {
   locationsOverlay.classList.remove('open')
 })
+
+const settingsFab = document.querySelector('#settings-fab')
+const settingsDialog = document.querySelector('#settings-dialog')
+
+settingsFab.addEventListener('click', () => {
+  settingsDialog.show()
+})
+
+document.querySelector('#settings-close').addEventListener('click', () => {
+  settingsDialog.close()
+})
+
+document.querySelector('#settings-check-update').addEventListener('click', async (e) => {
+  const item = e.currentTarget
+  item.classList.add('spinning')
+  const found = await checkForUpdate()
+  setTimeout(() => item.classList.remove('spinning'), 600)
+  if (!found) showToast("you're on the latest version")
+})
+
+document.querySelector('#settings-changelog').addEventListener('click', () => {
+  settingsDialog.close()
+  localStorage.removeItem(VERSION_KEY)
+  maybeShowChangelog()
+})
+
+document.querySelector('#settings-refresh-all').addEventListener('click', async (e) => {
+  const item = e.currentTarget
+  item.classList.add('spinning')
+  const locations = loadLocations()
+
+  await Promise.all(
+    locations.map(async (loc) => {
+      try {
+        const data = await fetchForecast(loc.place)
+        const payload = { place: loc.place, data, savedAt: Date.now() }
+        upsertLocation(payload)
+        if (currentPlace && placeKey(currentPlace) === placeKey(loc.place)) {
+          localStorage.setItem(LAST_KEY, JSON.stringify(payload))
+          render(payload)
+        }
+      } catch {
+        // leave that one as-is, move on
+      }
+    })
+  )
+
+  item.classList.remove('spinning')
+  settingsDialog.close()
+  showToast(`refreshed ${locations.length} location${locations.length === 1 ? '' : 's'}`)
+})
+
+document.querySelector('#settings-github').addEventListener('click', () => {
+  window.open('https://github.com/zoop-dev/weather', '_blank', 'noopener')
+})
+
+const clearDataConfirm = document.querySelector('#clear-data-confirm')
+
+document.querySelector('#settings-clear-data').addEventListener('click', () => {
+  settingsDialog.close()
+  clearDataConfirm.show()
+})
+
+document.querySelector('#clear-data-cancel').addEventListener('click', () => {
+  clearDataConfirm.close()
+})
+
+document.querySelector('#clear-data-confirm-btn').addEventListener('click', () => {
+  localStorage.clear()
+  window.location.reload()
+})
+
+function showToast(text) {
+  const label = document.createElement('div')
+  label.className = 'toast'
+  label.textContent = text
+  document.body.appendChild(label)
+  requestAnimationFrame(() => label.classList.add('visible'))
+  setTimeout(() => {
+    label.classList.remove('visible')
+    setTimeout(() => label.remove(), 300)
+  }, 2000)
+}
 
 addLocationFab.addEventListener('click', () => {
   locationsOverlay.classList.remove('open')
@@ -585,6 +717,13 @@ function wireTabs() {
       })
     })
   })
+
+  contentEl.querySelectorAll('.dgrid [data-metric]').forEach((card) => {
+    card.style.cursor = 'pointer'
+    card.addEventListener('click', () => {
+      openDetailPage(card.dataset.metric, currentData)
+    })
+  })
 }
 
 function renderHourly(data, mode = 'conditions') {
@@ -872,18 +1011,18 @@ function renderDetails(data) {
   const sunCard = sunCardMarkup(data)
 
   return `
-    <div class="dcard square">
+    <div class="dcard square" data-metric="precipitation">
       <div class="dlabel">${ICONS.rain}<span>Precipitation</span></div>
       <div class="dvalue">${precipIn != null ? (precipIn === 0 ? '0' : precipIn.toFixed(2)) : '—'}<span class="dunit">in</span></div>
       <div class="dsub">Today's total</div>
     </div>
-    <div class="dcard circle">
+    <div class="dcard circle" data-metric="wind">
       <div class="wind-bg" style="transform:translate(-50%,-50%) rotate(${Math.round(cur.wind_direction_10m)}deg)">${windArrow(0, false)}</div>
       <div class="dlabel">${ICONS.wind}<span>Wind</span></div>
       <div class="dvalue">${Math.round(cur.wind_speed_10m)}<span class="dunit">mph</span></div>
       <div class="dsub">Gusts: ${Math.round(cur.wind_gusts_10m)} mph</div>
     </div>
-    <div class="dcard circle gauge-card">
+    <div class="dcard circle gauge-card" data-metric="air">
       ${gaugeArc(aqi != null ? aqi / 300 : 0, aqiColor)}
       <div class="gauge-content">
         <div class="dlabel">${ICONS.leaf}<span>Air quality</span></div>
@@ -891,7 +1030,7 @@ function renderDetails(data) {
         <div class="dsub">${aqi != null ? aqiLabel(aqi) : ''}</div>
       </div>
     </div>
-    <div class="dcard square humidity-card">
+    <div class="dcard square humidity-card" data-metric="humidity">
       <div class="dlabel">${ICONS.humidity}<span>Humidity</span></div>
       <div class="dvalue">${cur.relative_humidity_2m}<span class="dunit">%</span></div>
       <div class="humidity-wave" style="height:${Math.max(cur.relative_humidity_2m, 14)}%">
@@ -901,18 +1040,18 @@ function renderDetails(data) {
         <div class="dewpoint-pill">${Math.round(cur.dew_point_2m)}° <span>Dew point</span></div>
       </div>
     </div>
-    <div class="dcard circle scalloped" style="clip-path:${scallopedClipPath(8, 50, 41)}">
+    <div class="dcard circle scalloped" data-metric="uv" style="clip-path:${scallopedClipPath(8, 50, 41)}">
       <div class="dlabel">${ICONS.uv}<span>UV index</span></div>
       <div class="dvalue">${Math.round(uv)}</div>
       <div class="dsub">${uvLevels[uvIdx].name}</div>
       <div class="uv-dots">${uvDots}</div>
     </div>
-    <div class="dcard circle scalloped filled" style="clip-path:${scallopedClipPath(8, 50, 41)}">
+    <div class="dcard circle scalloped filled" data-metric="visibility" style="clip-path:${scallopedClipPath(8, 50, 41)}">
       <div class="dlabel">${ICONS.eye}<span>Visibility</span></div>
       <div class="dvalue">${visMiles ?? '—'}<span class="dunit">mi</span></div>
       <div class="dsub">${visMilesRaw != null && visMilesRaw > 9 ? 'Perfectly clear' : ''}</div>
     </div>
-    <div class="dcard circle gauge-card">
+    <div class="dcard circle gauge-card" data-metric="pressure">
       ${gaugeArc((cur.pressure_msl - 970) / 80, '#8ec9ff')}
       <div class="gauge-content">
         <div class="dlabel">${ICONS.pressure}<span>Pressure</span></div>
@@ -959,7 +1098,7 @@ function sunCardMarkup(data) {
   const fmt = (d) => d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
 
   return `
-    <div class="dcard square sun-card">
+    <div class="dcard square sun-card" data-metric="sun">
       <div class="dlabel">${ICONS.sun}<span>Sun</span></div>
       <div class="sun-arc">
         <svg viewBox="0 0 200 100">
@@ -1070,9 +1209,5 @@ if (gated) {
     requestAnimationFrame(tick)
   })()
 
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js').catch(() => {})
-    })
-  }
+  initUpdateCheck()
 }

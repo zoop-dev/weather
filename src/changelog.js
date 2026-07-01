@@ -1,6 +1,18 @@
-export const APP_VERSION = '0.1.4'
+export const APP_VERSION = '0.1.5'
 
 export const CHANGELOG = [
+  {
+    version: '0.1.5',
+    date: '2026-07-01',
+    items: [
+      'detail page edu text rewritten, plus reference scales for wind/aqi/uv/visibility',
+      'humidity detail page now has separate blocks for humidity and dew point',
+      'settings: refresh all locations at once',
+      'settings: view source link, clear all data (with confirmation)',
+      'sw cache version now bumps itself automatically on every build',
+      'fixed a couple more missing fonts in settings/dialogs',
+    ],
+  },
   {
     version: '0.1.4',
     date: '2026-07-01',

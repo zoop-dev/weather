@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.5 — 2026-07-01
+
+- Rewrote detail page explainer text, added reference scales for wind (Beaufort), air quality, UV index, and visibility
+- Humidity detail page now has separate "About relative humidity" and "About dew point" sections
+- Settings: refresh all saved locations at once
+- Settings: view source link, clear all data (with confirmation)
+- Service worker cache version now bumps automatically on every build, tied to APP_VERSION
+- Fixed a few more missing font declarations in dialogs
+
 ## 0.1.4 — 2026-07-01
 
 - Fixed "Updated just now" showing even when data was old

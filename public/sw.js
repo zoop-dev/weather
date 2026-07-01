@@ -1,9 +1,12 @@
-const CACHE = 'weather-shell-v2'
+const CACHE = 'weather-shell-v4'
 const SHELL = ['/', '/manifest.webmanifest', '/icons/icon.svg', '/icons/icon-192.png']
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)))
-  self.skipWaiting()
+})
+
+self.addEventListener('message', (e) => {
+  if (e.data === 'SKIP_WAITING') self.skipWaiting()
 })
 
 self.addEventListener('activate', (e) => {
