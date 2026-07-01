@@ -1,6 +1,15 @@
-export const APP_VERSION = '0.1.6'
+export const APP_VERSION = '0.1.7'
 
 export const CHANGELOG = [
+  {
+    version: '0.1.7',
+    date: '2026-07-01',
+    items: [
+      'android back gesture now closes menus/search/detail pages instead of exiting the app',
+      'swiping between detail pages now actually shows the swipe instead of just switching',
+      'fixed a race condition when jumping from locations straight into search',
+    ],
+  },
   {
     version: '0.1.6',
     date: '2026-07-01',

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.7 — 2026-07-01
+
+- Android back gesture now closes menus/search/detail pages instead of exiting the app
+- Swiping between detail pages now shows an actual slide transition instead of an instant switch
+- Fixed a race condition when jumping from Locations straight into search
+
 ## 0.1.6 — 2026-07-01
 
 - Renamed the app to Weatherly

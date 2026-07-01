@@ -1,5 +1,7 @@
 // Copyright (c) 2026 zoop. See LICENSE.
 
+import { pushOverlay, popOverlay } from './back-nav.js'
+
 const ORDER = ['conditions', 'wind', 'air', 'uv', 'precipitation', 'humidity', 'pressure', 'visibility', 'sun']
 
 const LABELS = {
@@ -116,37 +118,86 @@ const EDU = {
 let currentIndex = 0
 let currentData = null
 let touchStartX = null
+let touchCurrentX = null
+let dragging = false
 
 export function openDetailPage(key, data) {
   currentData = data
   currentIndex = ORDER.indexOf(key)
   if (currentIndex === -1) currentIndex = 0
-  render()
+  const isNew = !document.querySelector('#detail-page')
+  buildFrame()
+  renderPane(currentIndex)
+  if (isNew) pushOverlay(closeDetailPage)
+  requestAnimationFrame(() => document.querySelector('#detail-page').classList.add('open'))
 }
 
-function render() {
-  const key = ORDER[currentIndex]
+function buildFrame() {
   let el = document.querySelector('#detail-page')
-  if (!el) {
-    el = document.createElement('div')
-    el.id = 'detail-page'
-    el.className = 'detail-page'
-    document.body.appendChild(el)
-    el.addEventListener('touchstart', (e) => (touchStartX = e.touches[0].clientX), { passive: true })
-    el.addEventListener(
-      'touchend',
-      (e) => {
-        if (touchStartX == null) return
-        const dx = e.changedTouches[0].clientX - touchStartX
-        touchStartX = null
-        if (Math.abs(dx) < 60) return
-        if (dx < 0) currentIndex = Math.min(currentIndex + 1, ORDER.length - 1)
-        else currentIndex = Math.max(currentIndex - 1, 0)
-        render()
-      },
-      { passive: true }
-    )
-  }
+  if (el) return el
+  el = document.createElement('div')
+  el.id = 'detail-page'
+  el.className = 'detail-page'
+  el.innerHTML = `<div class="detail-track"></div>`
+  document.body.appendChild(el)
+
+  const track = el.querySelector('.detail-track')
+
+  el.addEventListener(
+    'touchstart',
+    (e) => {
+      touchStartX = e.touches[0].clientX
+      touchCurrentX = touchStartX
+      dragging = true
+      track.style.transition = 'none'
+    },
+    { passive: true }
+  )
+
+  el.addEventListener(
+    'touchmove',
+    (e) => {
+      if (!dragging) return
+      touchCurrentX = e.touches[0].clientX
+      const dx = touchCurrentX - touchStartX
+      track.style.transform = `translateX(${dx}px)`
+    },
+    { passive: true }
+  )
+
+  el.addEventListener('touchend', () => {
+    if (!dragging) return
+    dragging = false
+    const dx = touchCurrentX - touchStartX
+    track.style.transition = 'transform 0.28s cubic-bezier(0.32, 0.72, 0, 1)'
+
+    const goingNext = dx < -60 && currentIndex < ORDER.length - 1
+    const goingPrev = dx > 60 && currentIndex > 0
+
+    if (goingNext || goingPrev) {
+      const dir = goingNext ? -1 : 1
+      track.style.transform = `translateX(${dir * 100}%)`
+      track.addEventListener(
+        'transitionend',
+        () => {
+          currentIndex += goingNext ? 1 : -1
+          track.style.transition = 'none'
+          track.style.transform = 'translateX(0)'
+          renderPane(currentIndex)
+        },
+        { once: true }
+      )
+    } else {
+      track.style.transform = 'translateX(0)'
+    }
+  })
+
+  return el
+}
+
+function renderPane(index) {
+  const key = ORDER[index]
+  const track = document.querySelector('#detail-page .detail-track')
 
   const daily = currentData.daily
   const dayLabels = daily.time.slice(0, 4).map((d, i) => {
@@ -169,7 +220,7 @@ function render() {
     )
     .join('')
 
-  el.innerHTML = `
+  track.innerHTML = `
     <div class="detail-header">
       <md-icon-button id="detail-back" aria-label="Back"><md-icon>arrow_back</md-icon></md-icon-button>
       <p class="detail-title">${LABELS[key]}</p>
@@ -191,16 +242,14 @@ function render() {
 
   renderBody(key, 0)
 
-  document.querySelector('#detail-back').addEventListener('click', closeDetailPage)
-  el.querySelectorAll('.detail-daytab').forEach((btn) => {
+  track.querySelector('#detail-back').addEventListener('click', popOverlay)
+  track.querySelectorAll('.detail-daytab').forEach((btn) => {
     btn.addEventListener('click', () => {
-      el.querySelectorAll('.detail-daytab').forEach((b) => b.classList.remove('active'))
+      track.querySelectorAll('.detail-daytab').forEach((b) => b.classList.remove('active'))
       btn.classList.add('active')
       renderBody(key, Number(btn.dataset.day))
     })
   })
-
-  requestAnimationFrame(() => el.classList.add('open'))
 }
 
 function renderTable(table) {

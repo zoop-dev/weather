@@ -1120,10 +1120,16 @@ md-text-button {
   z-index: 65;
   background: #05060a;
   overflow-y: auto;
-  padding: max(18px, env(safe-area-inset-top)) 18px max(24px, env(safe-area-inset-bottom));
+  overflow-x: hidden;
   opacity: 0;
   transform: translateY(16px);
   transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.detail-track {
+  width: 100%;
+  padding: max(18px, env(safe-area-inset-top)) 18px max(24px, env(safe-area-inset-bottom));
+  touch-action: pan-y;
 }
 
 .detail-page.open {

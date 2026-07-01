@@ -24,6 +24,7 @@ import { initPullToRefresh } from './pull-refresh.js'
 import { initUpdateCheck, checkForUpdate } from './update-check.js'
 import { openDetailPage } from './detail-page.js'
 import { APP_VERSION, CHANGELOG } from './changelog.js'
+import { pushOverlay, popOverlay, replaceOverlay } from './back-nav.js'
 
 const gated = initInstallGate()
 if (!gated) {
@@ -192,8 +193,7 @@ const onboardingCta = document.querySelector('#onboarding-cta')
 
 onboardingCta.addEventListener('click', () => {
   dismissOnboarding()
-  overlay.classList.add('open')
-  setTimeout(() => input.focus(), 50)
+  openSearchOverlay()
 })
 
 function dismissOnboarding() {
@@ -270,14 +270,17 @@ function showChangelogDialog(entries, onClose) {
 
 let debounceTimer = null
 
+function closeLocationsOverlay() {
+  locationsOverlay.classList.remove('open')
+}
+
 menuBtn.addEventListener('click', () => {
   renderLocationsList()
   locationsOverlay.classList.add('open')
+  pushOverlay(closeLocationsOverlay)
 })
 
-locationsBackBtn.addEventListener('click', () => {
-  locationsOverlay.classList.remove('open')
-})
+locationsBackBtn.addEventListener('click', popOverlay)
 
 const settingsFab = document.querySelector('#settings-fab')
 const settingsDialog = document.querySelector('#settings-dialog')
@@ -368,17 +371,28 @@ function showToast(text) {
 }
 
 addLocationFab.addEventListener('click', () => {
-  locationsOverlay.classList.remove('open')
-  overlay.classList.add('open')
-  setTimeout(() => input.focus(), 50)
+  replaceOverlay(
+    () => locationsOverlay.classList.remove('open'),
+    () => {
+      overlay.classList.add('open')
+      setTimeout(() => input.focus(), 50)
+    },
+    closeOverlay
+  )
 })
 
-closeBtn.addEventListener('click', closeOverlay)
+closeBtn.addEventListener('click', popOverlay)
 
 function closeOverlay() {
   overlay.classList.remove('open')
   input.value = ''
   resultsEl.innerHTML = ''
+}
+
+function openSearchOverlay() {
+  overlay.classList.add('open')
+  pushOverlay(closeOverlay)
+  setTimeout(() => input.focus(), 50)
 }
 
 input.addEventListener('input', () => {
@@ -565,7 +579,7 @@ function renderLocationsList() {
   locationsListEl.querySelectorAll('.location-pill').forEach((btn) => {
     btn.addEventListener('click', () => {
       const loc = list[Number(btn.dataset.i)]
-      locationsOverlay.classList.remove('open')
+      popOverlay()
       locName.textContent = loc.place.name
       locUpdated.textContent = 'Loading…'
       showSkeleton()
