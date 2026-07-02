@@ -1,6 +1,13 @@
-export const APP_VERSION = '0.1.7'
+export const APP_VERSION = '0.1.8'
 
 export const CHANGELOG = [
+  {
+    version: '0.1.8',
+    date: '2026-07-01',
+    items: [
+      'no visible changes — internal migration to a shared design system (zoop-kit) used across the app-tool family',
+    ],
+  },
   {
     version: '0.1.7',
     date: '2026-07-01',

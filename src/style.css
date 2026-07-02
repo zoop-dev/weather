@@ -1,3 +1,6 @@
+@import "zoop-kit/tokens.css";
+@import "zoop-kit/components.css";
+
 :root {
   --grad: #1e7fe0 0%, #4fb6ff 55%, #bfe8ff 100%;
   --accent: #ffd76a;

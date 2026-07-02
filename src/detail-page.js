@@ -1,6 +1,6 @@
 // Copyright (c) 2026 zoop. See LICENSE.
 
-import { pushOverlay, popOverlay } from './back-nav.js'
+import { pushOverlay, popOverlay } from 'zoop-kit/back-nav.js'
 
 const ORDER = ['conditions', 'wind', 'air', 'uv', 'precipitation', 'humidity', 'pressure', 'visibility', 'sun']
 

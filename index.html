@@ -16,7 +16,7 @@
   <body>
     <div id="boot-loader">
       <div class="boot-inner">
-        <div class="boot-word">WEATHER</div>
+        <div class="boot-word">WEATHERLY</div>
         <div class="boot-pct"><span id="boot-pct-num">0</span>%</div>
         <div class="boot-bar"><div class="boot-bar-fill" id="boot-bar-fill"></div></div>
       </div>
@@ -25,88 +25,5 @@
     </div>
     <div id="app"></div>
     <script type="module" src="/src/main.js"></script>
-    <style>
-      #boot-loader {
-        position: fixed;
-        inset: 0;
-        z-index: 999;
-      }
-
-      .boot-inner {
-        position: absolute;
-        inset: 0;
-        z-index: 2;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 18px;
-        background: #05060a;
-      }
-
-      .boot-word {
-        font-family: "Unbounded", system-ui, sans-serif;
-        font-weight: 800;
-        font-size: 0.85rem;
-        letter-spacing: 0.35em;
-        color: rgba(255, 255, 255, 0.35);
-        padding-left: 0.35em;
-      }
-
-      .boot-pct {
-        font-family: "Unbounded", system-ui, sans-serif;
-        font-weight: 800;
-        font-size: 4.2rem;
-        line-height: 1;
-        color: #f5f9ff;
-        font-variant-numeric: tabular-nums;
-        text-shadow: 0 0 30px rgba(76, 201, 255, 0.3);
-      }
-
-      .boot-bar {
-        width: 160px;
-        height: 2px;
-        background: rgba(255, 255, 255, 0.12);
-        border-radius: 2px;
-        overflow: hidden;
-      }
-
-      .boot-bar-fill {
-        height: 100%;
-        width: 0%;
-        background: linear-gradient(90deg, #4cc9ff, #7df9ff);
-        border-radius: 2px;
-      }
-
-      .boot-curtain {
-        position: absolute;
-        inset: 0;
-        z-index: 1;
-        background: #05060a;
-        transform: translateY(0);
-        transition: transform 0.7s cubic-bezier(0.65, 0, 0.35, 1);
-      }
-
-      .boot-curtain-2 {
-        transition-delay: 0.06s;
-      }
-
-      #boot-loader.leaving .boot-inner {
-        transition: opacity 0.3s ease;
-        opacity: 0;
-      }
-
-      #boot-loader.leaving .boot-curtain-1 {
-        transform: translateY(-100%);
-      }
-
-      #boot-loader.leaving .boot-curtain-2 {
-        transform: translateY(100%);
-      }
-
-      #boot-loader.hidden {
-        pointer-events: none;
-      }
-    </style>
   </body>
 </html>

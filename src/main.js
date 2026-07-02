@@ -18,15 +18,21 @@ import { describe, THEMES } from './weathercodes.js'
 import { weatherIcon } from './icons.js'
 import { initBackground, setBackgroundCondition } from './background.js'
 import { scallopedClipPath } from './shapes.js'
-import { initInstallGate } from './install-gate.js'
+import { initInstallGate } from 'zoop-kit/install-gate.js'
 import { initDesktopWarning } from './desktop-warning.js'
 import { initPullToRefresh } from './pull-refresh.js'
 import { initUpdateCheck, checkForUpdate } from './update-check.js'
 import { openDetailPage } from './detail-page.js'
 import { APP_VERSION, CHANGELOG } from './changelog.js'
-import { pushOverlay, popOverlay, replaceOverlay } from './back-nav.js'
+import { pushOverlay, popOverlay, replaceOverlay } from 'zoop-kit/back-nav.js'
+import { attachBootLoader, removeBootLoaderImmediately } from 'zoop-kit/boot-loader.js'
 
-const gated = initInstallGate()
+const gated = initInstallGate({
+  appName: 'Weatherly',
+  icon: 'sunny',
+  subtitle:
+    'works way better installed. full screen, works offline, no browser junk around it. privacy-focused — no location, camera, mic, or notification permissions needed.',
+})
 if (!gated) {
   initBackground()
   initDesktopWarning()
@@ -1177,7 +1183,7 @@ function loadLast() {
 }
 
 if (gated) {
-  document.querySelector('#boot-loader')?.remove()
+  removeBootLoaderImmediately()
 } else {
   loadLast()
   maybeShowOnboarding()
@@ -1196,45 +1202,7 @@ if (gated) {
     }
   })
 
-  ;(function bootSequence() {
-    const pctEl = document.querySelector('#boot-pct-num')
-    const barEl = document.querySelector('#boot-bar-fill')
-    const loader = document.querySelector('#boot-loader')
-    if (!loader) return
-
-    let displayed = 0
-    let ready = false
-    const bootStart = performance.now()
-
-    Promise.all([
-      document.fonts ? document.fonts.ready : Promise.resolve(),
-      new Promise((resolve) => setTimeout(resolve, 500)),
-    ]).then(() => {
-      ready = true
-    })
-
-    function tick() {
-      const elapsed = performance.now() - bootStart
-      const cap = ready ? 100 : 90 * (1 - Math.exp(-elapsed / 900))
-      displayed += (cap - displayed) * 0.12
-      const shown = Math.round(displayed)
-
-      if (pctEl) pctEl.textContent = shown
-      if (barEl) barEl.style.width = `${shown}%`
-
-      if (ready && shown >= 99) {
-        if (pctEl) pctEl.textContent = 100
-        if (barEl) barEl.style.width = '100%'
-        setTimeout(() => {
-          loader.classList.add('leaving')
-          setTimeout(() => loader.remove(), 800)
-        }, 200)
-        return
-      }
-      requestAnimationFrame(tick)
-    }
-    requestAnimationFrame(tick)
-  })()
+  attachBootLoader(() => {})
 
   initUpdateCheck()
 }
