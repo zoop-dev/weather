@@ -1,6 +1,14 @@
-export const APP_VERSION = '0.1.9'
+export const APP_VERSION = '0.1.10'
 
 export const CHANGELOG = [
+  {
+    version: '0.1.10',
+    date: '2026-07-02',
+    items: [
+      'added a share button in settings (opens the real android share sheet)',
+      'added "other apps by me" in settings, linking to taskly',
+    ],
+  },
   {
     version: '0.1.9',
     date: '2026-07-01',

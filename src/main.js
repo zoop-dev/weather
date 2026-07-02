@@ -1,4 +1,4 @@
-// Copyright (c) 2026 zoop. See LICENSE.
+
 
 import './style.css'
 import '@material/web/iconbutton/icon-button.js'
@@ -27,6 +27,7 @@ import { APP_VERSION, CHANGELOG } from './changelog.js'
 import { pushOverlay, popOverlay, replaceOverlay } from 'zoop-kit/back-nav.js'
 import { attachBootLoader, removeBootLoaderImmediately } from 'zoop-kit/boot-loader.js'
 import { showToast } from 'zoop-kit/toast.js'
+import { showAppSwitcher } from 'zoop-kit/app-switcher.js'
 
 const gated = initInstallGate({
   appName: 'Weatherly',
@@ -132,6 +133,14 @@ app.innerHTML = `
           <md-icon slot="start">sync</md-icon>
           <div slot="headline">Refresh all weather</div>
           <div slot="supporting-text">re-fetch every saved location</div>
+        </md-list-item>
+        <md-list-item type="button" id="settings-share">
+          <md-icon slot="start">ios_share</md-icon>
+          <div slot="headline">Share app</div>
+        </md-list-item>
+        <md-list-item type="button" id="settings-other-apps">
+          <md-icon slot="start">apps</md-icon>
+          <div slot="headline">Other apps by me</div>
         </md-list-item>
         <md-list-item type="button" id="settings-github">
           <md-icon slot="start">code</md-icon>
@@ -307,7 +316,7 @@ document.querySelector('#settings-check-update').addEventListener('click', async
   try {
     found = await checkForUpdate()
   } catch {
-    // treat a failed check the same as "nothing new" rather than hanging
+    
   }
   setTimeout(() => item.classList.remove('spinning'), 600)
   settingsDialog.close()
@@ -335,7 +344,7 @@ document.querySelector('#settings-refresh-all').addEventListener('click', async 
           render(payload)
         }
       } catch {
-        // leave that one as-is, move on
+        
       }
     })
   )
@@ -343,6 +352,26 @@ document.querySelector('#settings-refresh-all').addEventListener('click', async 
   item.classList.remove('spinning')
   settingsDialog.close()
   showToast(`refreshed ${locations.length} location${locations.length === 1 ? '' : 's'}`)
+})
+
+document.querySelector('#settings-share').addEventListener('click', async () => {
+  const url = window.location.origin
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: 'Weatherly', text: 'a weather app with no permissions needed', url })
+    } catch {
+      
+    }
+  } else {
+    await navigator.clipboard.writeText(url)
+    settingsDialog.close()
+    showToast('link copied')
+  }
+})
+
+document.querySelector('#settings-other-apps').addEventListener('click', () => {
+  settingsDialog.close()
+  showAppSwitcher('weatherly')
 })
 
 document.querySelector('#settings-github').addEventListener('click', () => {
@@ -1199,7 +1228,7 @@ if (gated) {
       upsertLocation(payload)
       render(payload)
     } catch {
-      // stay on whatever's currently shown
+      
     }
   })
 
