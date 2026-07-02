@@ -1,4 +1,4 @@
-// Copyright (c) 2026 zoop. See LICENSE.
+
 
 let canvas, ctx, particles = [], splashes = [], mode = 'cloudy', w = 0, h = 0
 

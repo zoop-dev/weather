@@ -15,7 +15,7 @@
   --font-body: "Space Grotesque", system-ui, sans-serif;
   --font-accent: "Josefin Sans", system-ui, sans-serif;
 
-  /* M3 system tokens, mapped onto our dark/neon palette */
+  
   --md-sys-color-primary: var(--accent);
   --md-sys-color-on-primary: #1a1406;
   --md-sys-color-secondary: var(--accent);
@@ -81,7 +81,7 @@ body {
   gap: 22px;
 }
 
-/* top bar */
+
 .topbar {
   display: flex;
   align-items: center;
@@ -115,7 +115,7 @@ body {
   flex-shrink: 0;
 }
 
-/* search overlay */
+
 .search-overlay {
   position: fixed;
   inset: 0;
@@ -359,7 +359,7 @@ body {
   text-align: center;
 }
 
-/* onboarding */
+
 .onboarding {
   position: fixed;
   inset: 0;
@@ -464,7 +464,7 @@ body {
   flex-shrink: 0;
 }
 
-/* changelog dialog */
+
 .changelog-dialog {
   --md-dialog-container-color: #0d1017;
   --md-dialog-headline-color: var(--text);
@@ -519,7 +519,7 @@ md-text-button {
   font-size: 0.98rem;
 }
 
-/* install gate */
+
 .install-gate {
   position: fixed;
   inset: 0;
@@ -709,7 +709,7 @@ md-text-button {
   to { transform: rotate(360deg); }
 }
 
-/* hero */
+
 .hero {
   display: flex;
   flex-direction: column;
@@ -772,7 +772,7 @@ md-text-button {
   margin-top: 2px;
 }
 
-/* sections */
+
 .panel {
   background: #0a0c12;
   border: none;
@@ -825,7 +825,7 @@ md-text-button {
   color: #14141c;
 }
 
-/* hourly */
+
 .hourly-scroll {
   display: flex;
   gap: 2px;
@@ -890,7 +890,7 @@ md-text-button {
   background: linear-gradient(180deg, var(--accent), #5ee0a0);
 }
 
-/* daily */
+
 .daily-click-wrap {
   position: relative;
 }
@@ -1096,7 +1096,7 @@ md-text-button {
   color: var(--muted);
 }
 
-/* details grid */
+
 .dgrid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -1441,7 +1441,7 @@ md-text-button {
   margin-top: 4px;
 }
 
-/* gauge cards */
+
 .gauge-card {
   position: relative;
 }
@@ -1490,7 +1490,7 @@ md-text-button {
   color: rgba(192, 132, 252, 0.28);
 }
 
-/* dew point pill */
+
 .dewpoint-pill {
   position: relative;
   z-index: 1;
@@ -1508,7 +1508,7 @@ md-text-button {
   text-transform: none;
 }
 
-/* uv dot legend */
+
 .uv-dots {
   display: flex;
   gap: 5px;
@@ -1528,7 +1528,7 @@ md-text-button {
   box-shadow: 0 0 6px var(--c);
 }
 
-/* sun card (full-width tile) */
+
 
 .sun-arc {
   display: flex;
@@ -1565,7 +1565,7 @@ md-text-button {
   text-align: right;
 }
 
-/* skeleton loading state */
+
 .skeleton {
   display: flex;
   flex-direction: column;
@@ -1633,7 +1633,7 @@ md-text-button {
   }
 }
 
-/* status */
+
 .status {
   text-align: center;
   color: var(--muted);
@@ -1658,7 +1658,7 @@ md-text-button {
   margin-top: 6px;
 }
 
-/* weather icon animations (own, applied to the whole glyph) */
+
 .wicon-clear-day {
   animation: pulse-glow 3.2s ease-in-out infinite;
 }

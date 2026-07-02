@@ -19,9 +19,9 @@ import { weatherIcon } from './icons.js'
 import { initBackground, setBackgroundCondition } from './background.js'
 import { scallopedClipPath } from './shapes.js'
 import { initInstallGate } from 'zoop-kit/install-gate.js'
-import { initDesktopWarning } from './desktop-warning.js'
+import { initDesktopWarning } from 'zoop-kit/desktop-warning.js'
 import { initPullToRefresh } from './pull-refresh.js'
-import { initUpdateCheck, checkForUpdate } from './update-check.js'
+import { initUpdateCheck, checkForUpdate } from 'zoop-kit/update-check.js'
 import { openDetailPage, openDayOverview } from './detail-page.js'
 import { APP_VERSION, CHANGELOG } from './changelog.js'
 import { pushOverlay, popOverlay, replaceOverlay } from 'zoop-kit/back-nav.js'
@@ -37,7 +37,7 @@ const gated = initInstallGate({
 })
 if (!gated) {
   initBackground()
-  initDesktopWarning()
+  initDesktopWarning('weather:desktop-warning-dismissed')
 }
 
 const GEOCODE_URL = 'https://geocoding-api.open-meteo.com/v1/search'

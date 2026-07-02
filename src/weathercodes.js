@@ -1,4 +1,4 @@
-// Copyright (c) 2026 zoop. See LICENSE.
+
 
 const WMO = {
   0: { icon: 'clear', label: 'Clear sky' },

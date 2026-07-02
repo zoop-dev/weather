@@ -1,6 +1,6 @@
-// Copyright (c) 2026 zoop. See LICENSE.
-// Rewrites the service worker's cache name after every build, tied to
-// APP_VERSION, so we never have to remember to bump it by hand.
+
+
+
 
 import { readFileSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'

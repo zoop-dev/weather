@@ -1,4 +1,4 @@
-// Copyright (c) 2026 zoop. See LICENSE.
+
 
 function toPercent(points) {
   return points.map(([x, y]) => `${x.toFixed(2)}% ${y.toFixed(2)}%`).join(', ')

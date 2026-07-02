@@ -1,4 +1,4 @@
-// Copyright (c) 2026 zoop. See LICENSE.
+
 
 const FILES = {
   'clear-day': 'clear-day.svg',

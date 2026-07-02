@@ -1,4 +1,4 @@
-// Copyright (c) 2026 zoop. See LICENSE.
+
 
 import { pushOverlay, popOverlay } from 'zoop-kit/back-nav.js'
 import { describe } from './weathercodes.js'

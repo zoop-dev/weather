@@ -1,4 +1,4 @@
-// Copyright (c) 2026 zoop. See LICENSE.
+
 
 const THRESHOLD = 70
 const MAX_PULL = 110
