@@ -709,41 +709,6 @@ md-text-button {
   to { transform: rotate(360deg); }
 }
 
-.desktop-warning {
-  position: fixed;
-  top: max(12px, env(safe-area-inset-top));
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 80;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 10px 10px 16px;
-  border-radius: 999px;
-  background: #1a1c26;
-  border: 1px solid rgba(255, 159, 90, 0.35);
-  font-size: 0.82rem;
-  color: var(--text);
-  max-width: 90vw;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-  transition: opacity 0.3s ease, transform 0.3s ease;
-}
-
-.desktop-warning.leaving {
-  opacity: 0;
-  transform: translateX(-50%) translateY(-10px);
-}
-
-.desktop-warning md-icon:first-child {
-  color: #ff9f5a;
-  flex-shrink: 0;
-}
-
-.desktop-warning #desktop-warning-close {
-  --md-icon-button-icon-size: 18px;
-  flex-shrink: 0;
-}
-
 /* hero */
 .hero {
   display: flex;
@@ -926,6 +891,27 @@ md-text-button {
 }
 
 /* daily */
+.daily-click-wrap {
+  position: relative;
+}
+
+.daily-click-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.daily-click-cell {
+  all: unset;
+  cursor: pointer;
+  border-radius: 12px;
+}
+
+.daily-click-cell:active {
+  background: rgba(255, 255, 255, 0.08);
+}
+
 .daily-grid-row {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -1160,12 +1146,18 @@ md-text-button {
   display: flex;
   gap: 6px;
   margin-bottom: 20px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.detail-daytabs::-webkit-scrollbar {
+  display: none;
 }
 
 .detail-daytab {
   all: unset;
   font-family: var(--font-body);
-  flex: 1;
+  flex: 0 0 52px;
   cursor: pointer;
   text-align: center;
   padding: 10px 4px;
@@ -1201,6 +1193,70 @@ md-text-button {
   font-weight: 800;
   text-align: center;
   margin: 8px 0 20px;
+}
+
+.overview-hero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.overview-hero-icon {
+  font-size: 52px;
+}
+
+.overview-hero-temps {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 2.1rem;
+}
+
+.overview-hero-temps span {
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 1.5rem;
+}
+
+.overview-card {
+  cursor: pointer;
+  margin-bottom: 0;
+  transition: transform 0.15s ease;
+}
+
+.overview-card:active {
+  transform: scale(0.97);
+}
+
+.overview-card-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  margin-bottom: 10px;
+}
+
+.overview-card-badge {
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.overview-card-badge md-icon {
+  font-size: 17px;
+  --md-icon-size: 17px;
+}
+
+.overview-card-value {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.2rem;
 }
 
 .detail-chart {

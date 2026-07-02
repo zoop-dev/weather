@@ -1,6 +1,18 @@
-export const APP_VERSION = '0.1.8'
+export const APP_VERSION = '0.1.9'
 
 export const CHANGELOG = [
+  {
+    version: '0.1.9',
+    date: '2026-07-01',
+    items: [
+      'tapping a day in the 7-day forecast now opens a full day overview — every metric at once',
+      'tap any metric card in the overview to drill into its full detail page',
+      'fixed air quality, uv, and pressure detail pages showing temperature data instead of their own',
+      'added real hourly humidity/pressure/uv data instead of just a current-moment snapshot',
+      'detail pages now show supporting stats (max gust, aqi category, pressure trend, etc), not just a chart',
+      'added missing "about the daily high/low" explainer to the temperature detail page',
+    ],
+  },
   {
     version: '0.1.8',
     date: '2026-07-01',

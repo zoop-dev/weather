@@ -1,6 +1,8 @@
 // Copyright (c) 2026 zoop. See LICENSE.
 
 import { pushOverlay, popOverlay } from 'zoop-kit/back-nav.js'
+import { describe } from './weathercodes.js'
+import { weatherIcon } from './icons.js'
 
 const ORDER = ['conditions', 'wind', 'air', 'uv', 'precipitation', 'humidity', 'pressure', 'visibility', 'sun']
 
@@ -17,6 +19,12 @@ const LABELS = {
 }
 
 const EDU = {
+  conditions: [
+    {
+      title: 'About the daily high/low',
+      text: `The high and low shown here are the day's forecast extremes — the warmest and coolest the air is expected to get, not what it feels like with wind or humidity factored in. "Feels like" adjusts for wind chill and humidity, which is why it can read noticeably different from the actual air temperature.`,
+    },
+  ],
   wind: [
     {
       title: 'About wind speed and gusts',
@@ -116,15 +124,17 @@ const EDU = {
 }
 
 let currentIndex = 0
+let currentDayIndex = 0
 let currentData = null
 let touchStartX = null
 let touchCurrentX = null
 let dragging = false
 
-export function openDetailPage(key, data) {
+export function openDetailPage(key, data, dayIndex = 0) {
   currentData = data
   currentIndex = ORDER.indexOf(key)
   if (currentIndex === -1) currentIndex = 0
+  currentDayIndex = dayIndex
   const isNew = !document.querySelector('#detail-page')
   buildFrame()
   renderPane(currentIndex)
@@ -200,7 +210,7 @@ function renderPane(index) {
   const track = document.querySelector('#detail-page .detail-track')
 
   const daily = currentData.daily
-  const dayLabels = daily.time.slice(0, 4).map((d, i) => {
+  const dayLabels = daily.time.map((d, i) => {
     const date = new Date(d)
     return {
       dow: i === 0 ? 'Today' : date.toLocaleDateString(undefined, { weekday: 'short' }),
@@ -230,7 +240,7 @@ function renderPane(index) {
       ${dayLabels
         .map(
           (d, i) =>
-            `<button type="button" class="detail-daytab${i === 0 ? ' active' : ''}" data-day="${i}">
+            `<button type="button" class="detail-daytab${i === currentDayIndex ? ' active' : ''}" data-day="${i}">
               <span class="dow">${d.dow}</span><span class="num">${d.num}</span>
             </button>`
         )
@@ -240,14 +250,19 @@ function renderPane(index) {
     ${eduBlocks}
   `
 
-  renderBody(key, 0)
+  renderBody(key, currentDayIndex)
+
+  const dayTabsEl = track.querySelector('.detail-daytabs')
+  const activeTab = dayTabsEl.querySelector('.detail-daytab.active')
+  if (activeTab) activeTab.scrollIntoView({ inline: 'center', block: 'nearest' })
 
   track.querySelector('#detail-back').addEventListener('click', popOverlay)
   track.querySelectorAll('.detail-daytab').forEach((btn) => {
     btn.addEventListener('click', () => {
       track.querySelectorAll('.detail-daytab').forEach((b) => b.classList.remove('active'))
       btn.classList.add('active')
-      renderBody(key, Number(btn.dataset.day))
+      currentDayIndex = Number(btn.dataset.day)
+      renderBody(key, currentDayIndex)
     })
   })
 }
@@ -271,9 +286,58 @@ function renderTable(table) {
   `
 }
 
-function renderBody(key, dayIdx) {
-  const body = document.querySelector('#detail-body')
-  const data = currentData
+const COMPASS = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW']
+function compassLabel(deg) {
+  return COMPASS[Math.round(deg / 22.5) % 16]
+}
+
+function aqiCategory(v) {
+  if (v == null) return '—'
+  if (v <= 50) return 'Good'
+  if (v <= 100) return 'Moderate'
+  if (v <= 150) return 'Unhealthy for sensitive groups'
+  if (v <= 200) return 'Unhealthy'
+  if (v <= 300) return 'Very unhealthy'
+  return 'Hazardous'
+}
+
+function uvCategory(v) {
+  if (v <= 2) return 'Low'
+  if (v <= 5) return 'Moderate'
+  if (v <= 7) return 'High'
+  if (v <= 10) return 'Very high'
+  return 'Extreme'
+}
+
+function aqiColor(v) {
+  if (v == null) return 'var(--muted)'
+  if (v <= 50) return '#5ee0a0'
+  if (v <= 100) return '#ffd76a'
+  if (v <= 150) return '#ff9f5a'
+  if (v <= 200) return '#ff6a6a'
+  if (v <= 300) return '#c084fc'
+  return '#8a2942'
+}
+
+function uvColor(v) {
+  if (v <= 2) return '#5ee0a0'
+  if (v <= 5) return '#a9c93c'
+  if (v <= 7) return '#ff9f5a'
+  if (v <= 10) return '#ff6a6a'
+  return '#c084fc'
+}
+
+const OVERVIEW_COLORS = {
+  conditions: '#ffd76a',
+  wind: '#8ec9ff',
+  precipitation: '#4cc9ff',
+  humidity: '#5ee0d8',
+  pressure: '#c9a8ff',
+  visibility: '#a9c93c',
+  sun: '#ffb35a',
+}
+
+function computeMetric(data, key, dayIdx) {
   const dayStr = data.daily.time[dayIdx]
   const hourIdxs = data.hourly.time
     .map((t, i) => (t.startsWith(dayStr) ? i : -1))
@@ -281,38 +345,214 @@ function renderBody(key, dayIdx) {
 
   let headline = ''
   let values = []
+  let stats = []
 
   if (key === 'wind') {
     values = hourIdxs.map((i) => data.hourly.wind_speed_10m[i])
     headline = `${Math.round(Math.min(...values))}–${Math.round(Math.max(...values))} mph`
+    stats = [
+      { label: 'Max gust', value: `${Math.round(data.daily.wind_gusts_10m_max[dayIdx])} mph` },
+      { label: 'Direction', value: compassLabel(data.daily.wind_direction_10m_dominant[dayIdx]) },
+    ]
+  } else if (key === 'air') {
+    const aqiIdxs = (data.hourlyAqiTime || []).map((t, i) => (t.startsWith(dayStr) ? i : -1)).filter((i) => i >= 0)
+    values = aqiIdxs.map((i) => data.hourlyAqi[i]).filter((v) => v != null)
+    const dayMax = values.length ? Math.max(...values) : null
+    headline = dayMax != null ? `${Math.round(dayMax)} AQI` : '—'
+    stats = [{ label: 'Category', value: aqiCategory(dayMax) }]
+  } else if (key === 'uv') {
+    values = hourIdxs.map((i) => data.hourly.uv_index[i]).filter((v) => v != null)
+    const dayMax = data.daily.uv_index_max[dayIdx]
+    headline = `${Math.round(dayMax)} peak`
+    stats = [{ label: 'Category', value: uvCategory(dayMax) }]
   } else if (key === 'humidity') {
-    values = hourIdxs.map(() => data.current.relative_humidity_2m)
-    headline = `${data.current.relative_humidity_2m}%`
+    values = hourIdxs.map((i) => data.hourly.relative_humidity_2m[i])
+    headline = `${Math.round(Math.min(...values))}–${Math.round(Math.max(...values))}%`
+    stats = [{ label: 'Average', value: `${Math.round(values.reduce((a, b) => a + b, 0) / values.length)}%` }]
+  } else if (key === 'pressure') {
+    values = hourIdxs.map((i) => data.hourly.pressure_msl[i])
+    const first = values[0]
+    const last = values[values.length - 1]
+    headline = `${(Math.min(...values) * 0.02953).toFixed(2)}–${(Math.max(...values) * 0.02953).toFixed(2)} inHg`
+    stats = [{ label: 'Trend', value: last > first + 1 ? 'Rising' : last < first - 1 ? 'Falling' : 'Steady' }]
+  } else if (key === 'visibility') {
+    values = hourIdxs.map((i) => data.hourly.visibility[i] / 1609.34)
+    const lo = Math.min(...values)
+    headline = lo > 9 ? 'Clear all day' : `${lo.toFixed(1)}–${Math.max(...values).toFixed(1)} mi`
+    stats = [{ label: 'Lowest', value: `${lo > 9 ? '10+' : lo.toFixed(1)} mi` }]
   } else if (key === 'precipitation') {
     values = hourIdxs.map((i) => data.hourly.precipitation_probability[i])
     headline = `${data.daily.precipitation_probability_max[dayIdx] ?? 0}% chance`
+    stats = [{ label: 'Total', value: `${(data.daily.precipitation_sum[dayIdx] ?? 0).toFixed(2)} in` }]
+  } else if (key === 'sun') {
+    const sunrise = new Date(data.daily.sunrise[dayIdx])
+    const sunset = new Date(data.daily.sunset[dayIdx])
+    const dayLenMs = sunset - sunrise
+    const dayLenH = Math.floor(dayLenMs / 3600000)
+    const dayLenM = Math.round((dayLenMs % 3600000) / 60000)
+    values = []
+    headline = `${dayLenH}h ${dayLenM}m of daylight`
+    stats = [
+      { label: 'Sunrise', value: sunrise.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }) },
+      { label: 'Sunset', value: sunset.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }) },
+    ]
   } else {
     values = hourIdxs.map((i) => data.hourly.temperature_2m[i])
     headline = `${Math.round(data.daily.temperature_2m_max[dayIdx])}° / ${Math.round(data.daily.temperature_2m_min[dayIdx])}°`
+    stats = [{ label: 'Feels like', value: `${Math.round(data.current.apparent_temperature)}°` }]
   }
 
-  const max = Math.max(...values, 1)
-  const min = Math.min(...values, 0)
-  const span = Math.max(max - min, 1)
-  const points = values
-    .map((v, i) => {
-      const x = (i / Math.max(values.length - 1, 1)) * 100
-      const y = 90 - ((v - min) / span) * 80
-      return `${i === 0 ? 'M' : 'L'}${x},${y}`
-    })
-    .join(' ')
+  return { headline, values, stats }
+}
+
+function renderBody(key, dayIdx) {
+  const body = document.querySelector('#detail-body')
+  const { headline, values, stats } = computeMetric(currentData, key, dayIdx)
+
+  const chart = values.length
+    ? (() => {
+        const max = Math.max(...values, 1)
+        const min = Math.min(...values, 0)
+        const span = Math.max(max - min, 1)
+        const points = values
+          .map((v, i) => {
+            const x = (i / Math.max(values.length - 1, 1)) * 100
+            const y = 90 - ((v - min) / span) * 80
+            return `${i === 0 ? 'M' : 'L'}${x},${y}`
+          })
+          .join(' ')
+        return `
+          <svg class="detail-chart" width="100%" height="160" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <path d="${points}" fill="none" stroke="var(--accent)" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        `
+      })()
+    : ''
 
   body.innerHTML = `
     <p class="detail-headline">${headline}</p>
-    <svg class="detail-chart" viewBox="0 0 100 100" preserveAspectRatio="none">
-      <path d="${points}" fill="none" stroke="var(--accent)" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
-    </svg>
+    ${chart}
+    <div class="stat-strip">
+      ${stats.map((s) => `<div class="card stat-pill"><div class="stat-num">${s.value}</div><div class="stat-label">${s.label}</div></div>`).join('')}
+    </div>
   `
+}
+
+const OVERVIEW_ICONS = {
+  conditions: 'device_thermostat',
+  wind: 'air',
+  air: 'eco',
+  uv: 'wb_sunny',
+  precipitation: 'rainy',
+  humidity: 'humidity_percentage',
+  pressure: 'speed',
+  visibility: 'visibility',
+  sun: 'wb_twilight',
+}
+
+export function openDayOverview(data, dayIndex = 0) {
+  currentData = data
+  currentDayIndex = dayIndex
+  const isNew = !document.querySelector('#day-overview')
+  buildOverviewFrame()
+  renderOverview()
+  if (isNew) pushOverlay(closeDayOverview)
+  requestAnimationFrame(() => document.querySelector('#day-overview').classList.add('open'))
+}
+
+function buildOverviewFrame() {
+  let el = document.querySelector('#day-overview')
+  if (el) return el
+  el = document.createElement('div')
+  el.id = 'day-overview'
+  el.className = 'detail-page'
+  document.body.appendChild(el)
+  return el
+}
+
+function renderOverview() {
+  const el = document.querySelector('#day-overview')
+  const daily = currentData.daily
+  const dayLabels = daily.time.map((d, i) => {
+    const date = new Date(d)
+    return {
+      dow: i === 0 ? 'Today' : date.toLocaleDateString(undefined, { weekday: 'short' }),
+      num: date.getDate(),
+    }
+  })
+
+  const { icon } = describe(daily.weather_code[currentDayIndex], 1)
+  const hi = Math.round(daily.temperature_2m_max[currentDayIndex])
+  const lo = Math.round(daily.temperature_2m_min[currentDayIndex])
+
+  el.innerHTML = `
+    <div class="detail-track">
+      <div class="detail-header">
+        <md-icon-button id="overview-back" aria-label="Back"><md-icon>arrow_back</md-icon></md-icon-button>
+        <p class="detail-title">${new Date(daily.time[currentDayIndex]).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+        <span class="overlay-spacer"></span>
+      </div>
+      <div class="detail-daytabs">
+        ${dayLabels
+          .map(
+            (d, i) =>
+              `<button type="button" class="detail-daytab${i === currentDayIndex ? ' active' : ''}" data-day="${i}">
+                <span class="dow">${d.dow}</span><span class="num">${d.num}</span>
+              </button>`
+          )
+          .join('')}
+      </div>
+      <div class="overview-hero">
+        <div class="overview-hero-icon">${weatherIcon(icon)}</div>
+        <div class="overview-hero-temps">${hi}° <span>/ ${lo}°</span></div>
+      </div>
+      <div class="tile-grid" id="overview-grid" style="grid-template-columns:repeat(2, 1fr); gap:12px;"></div>
+    </div>
+  `
+
+  const grid = el.querySelector('#overview-grid')
+  grid.innerHTML = ORDER.map((key) => {
+    const { headline } = computeMetric(currentData, key, currentDayIndex)
+    let color = OVERVIEW_COLORS[key] || 'var(--accent)'
+    if (key === 'air') {
+      const aqi = computeMetric(currentData, 'air', currentDayIndex)
+      color = aqiColor(aqi.headline === '—' ? null : parseFloat(aqi.headline))
+    } else if (key === 'uv') {
+      color = uvColor(currentData.daily.uv_index_max[currentDayIndex])
+    }
+    return `
+      <div class="card overview-card" data-key="${key}">
+        <div class="overview-card-label">
+          <div class="overview-card-badge" style="background:${color}22; color:${color};"><md-icon>${OVERVIEW_ICONS[key]}</md-icon></div>
+          <span>${LABELS[key]}</span>
+        </div>
+        <div class="overview-card-value">${headline}</div>
+      </div>
+    `
+  }).join('')
+
+  const activeTab = el.querySelector('.detail-daytab.active')
+  if (activeTab) activeTab.scrollIntoView({ inline: 'center', block: 'nearest' })
+
+  el.querySelector('#overview-back').addEventListener('click', popOverlay)
+  el.querySelectorAll('.detail-daytab').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      currentDayIndex = Number(btn.dataset.day)
+      renderOverview()
+    })
+  })
+  grid.querySelectorAll('.overview-card').forEach((card) => {
+    card.addEventListener('click', () => {
+      openDetailPage(card.dataset.key, currentData, currentDayIndex)
+    })
+  })
+}
+
+function closeDayOverview() {
+  const el = document.querySelector('#day-overview')
+  if (!el) return
+  el.classList.remove('open')
+  setTimeout(() => el.remove(), 300)
 }
 
 function closeDetailPage() {

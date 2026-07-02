@@ -22,10 +22,11 @@ import { initInstallGate } from 'zoop-kit/install-gate.js'
 import { initDesktopWarning } from './desktop-warning.js'
 import { initPullToRefresh } from './pull-refresh.js'
 import { initUpdateCheck, checkForUpdate } from './update-check.js'
-import { openDetailPage } from './detail-page.js'
+import { openDetailPage, openDayOverview } from './detail-page.js'
 import { APP_VERSION, CHANGELOG } from './changelog.js'
 import { pushOverlay, popOverlay, replaceOverlay } from 'zoop-kit/back-nav.js'
 import { attachBootLoader, removeBootLoaderImmediately } from 'zoop-kit/boot-loader.js'
+import { showToast } from 'zoop-kit/toast.js'
 
 const gated = initInstallGate({
   appName: 'Weatherly',
@@ -364,17 +365,6 @@ document.querySelector('#clear-data-confirm-btn').addEventListener('click', () =
   window.location.reload()
 })
 
-function showToast(text) {
-  const label = document.createElement('div')
-  label.className = 'toast'
-  label.textContent = text
-  document.body.appendChild(label)
-  requestAnimationFrame(() => label.classList.add('visible'))
-  setTimeout(() => {
-    label.classList.remove('visible')
-    setTimeout(() => label.remove(), 300)
-  }, 2000)
-}
 
 addLocationFab.addEventListener('click', () => {
   replaceOverlay(
@@ -607,7 +597,7 @@ async function fetchForecast(place) {
   const url =
     `${FORECAST_URL}?latitude=${place.latitude}&longitude=${place.longitude}` +
     `&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,wind_gusts_10m,wind_direction_10m,pressure_msl,is_day,dew_point_2m` +
-    `&hourly=temperature_2m,weather_code,precipitation_probability,visibility,wind_speed_10m,wind_direction_10m` +
+    `&hourly=temperature_2m,weather_code,precipitation_probability,visibility,wind_speed_10m,wind_direction_10m,relative_humidity_2m,pressure_msl,uv_index` +
     `&daily=weather_code,temperature_2m_max,temperature_2m_min,uv_index_max,precipitation_probability_max,precipitation_sum,sunrise,sunset,wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant` +
     `&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto&forecast_days=7`
   const res = await fetch(url)
@@ -696,7 +686,12 @@ function render({ place, data, savedAt }, cached = false) {
     <div class="panel" style="margin-bottom:14px">
       <h2>${ICONS.calendar}Daily forecast</h2>
       ${tabsHtml(dailyMode)}
-      <div id="daily-body">${renderDaily(data, dailyMode)}</div>
+      <div class="daily-click-wrap">
+        <div id="daily-body">${renderDaily(data, dailyMode)}</div>
+        <div class="daily-click-overlay">
+          ${data.daily.time.map((_, i) => `<button type="button" class="daily-click-cell" data-day="${i}" aria-label="Open day details"></button>`).join('')}
+        </div>
+      </div>
     </div>
     <div class="panel" style="margin-bottom:14px">
       <h2>${ICONS.clock}Hourly forecast</h2>
@@ -755,6 +750,12 @@ function wireTabs() {
     card.style.cursor = 'pointer'
     card.addEventListener('click', () => {
       openDetailPage(card.dataset.metric, currentData)
+    })
+  })
+
+  contentEl.querySelectorAll('.daily-click-cell').forEach((cell) => {
+    cell.addEventListener('click', () => {
+      openDayOverview(currentData, Number(cell.dataset.day))
     })
   })
 }
