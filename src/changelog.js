@@ -1,6 +1,11 @@
-export const APP_VERSION = '0.1.14'
+export const APP_VERSION = '0.1.15'
 
 export const CHANGELOG = [
+  {
+    version: '0.1.15',
+    date: '2026-07-03',
+    items: ['fixed the day/metric detail page silently blocking all scrolling and taps on the main screen after being opened once'],
+  },
   {
     version: '0.1.14',
     date: '2026-07-03',
