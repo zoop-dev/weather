@@ -1,6 +1,11 @@
-export const APP_VERSION = '0.1.13'
+export const APP_VERSION = '0.1.14'
 
 export const CHANGELOG = [
+  {
+    version: '0.1.14',
+    date: '2026-07-03',
+    items: ['fixed pull-to-refresh triggering on every scroll attempt instead of only at the top of the page'],
+  },
   {
     version: '0.1.13',
     date: '2026-07-03',

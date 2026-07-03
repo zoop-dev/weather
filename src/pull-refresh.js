@@ -17,7 +17,9 @@ export function initPullToRefresh(scrollEl, onRefresh) {
   scrollEl.addEventListener(
     'touchstart',
     (e) => {
-      if (scrollEl.scrollTop > 0 || refreshing) return
+      
+      
+      if (window.scrollY > 0 || refreshing) return
       startY = e.touches[0].clientY
       pulling = true
     },
