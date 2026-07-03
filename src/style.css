@@ -4,6 +4,7 @@
 :root {
   --grad: #1e7fe0 0%, #4fb6ff 55%, #bfe8ff 100%;
   --accent: #ffd76a;
+  --accent-on: #2a2004;
   --text: #f5f9ff;
   --muted: rgba(245, 249, 255, 0.7);
   --glass: rgba(255, 255, 255, 0.10);
@@ -213,8 +214,8 @@ body {
   position: absolute;
   right: 18px;
   bottom: max(90px, calc(env(safe-area-inset-bottom) + 74px));
-  --md-fab-container-color: #b28dff;
-  --md-fab-icon-color: #1a1023;
+  --md-fab-container-color: var(--accent);
+  --md-fab-icon-color: var(--accent-on);
 }
 
 .settings-dialog {

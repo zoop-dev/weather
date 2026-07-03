@@ -1,6 +1,11 @@
-export const APP_VERSION = '0.1.11'
+export const APP_VERSION = '0.1.12'
 
 export const CHANGELOG = [
+  {
+    version: '0.1.12',
+    date: '2026-07-03',
+    items: ['migrating old deps to a new central system'],
+  },
   {
     version: '0.1.11',
     date: '2026-07-03',

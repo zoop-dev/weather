@@ -21,13 +21,13 @@ import { scallopedClipPath } from './shapes.js'
 import { initInstallGate } from 'zoop-kit/install-gate.js'
 import { initDesktopWarning } from 'zoop-kit/desktop-warning.js'
 import { initPullToRefresh } from './pull-refresh.js'
-import { initUpdateCheck, checkForUpdate } from 'zoop-kit/update-check.js'
+import { initUpdateCheck } from 'zoop-kit/update-check.js'
 import { openDetailPage, openDayOverview } from './detail-page.js'
 import { APP_VERSION, CHANGELOG } from './changelog.js'
 import { pushOverlay, popOverlay, replaceOverlay } from 'zoop-kit/back-nav.js'
 import { attachBootLoader, removeBootLoaderImmediately } from 'zoop-kit/boot-loader.js'
 import { showToast } from 'zoop-kit/toast.js'
-import { showAppSwitcher } from 'zoop-kit/app-switcher.js'
+import { initSettingsMenu } from 'zoop-kit/settings-menu.js'
 
 const gated = initInstallGate({
   appName: 'Weatherly',
@@ -115,58 +115,6 @@ app.innerHTML = `
       <md-icon slot="icon">add</md-icon>
     </md-fab>
   </div>
-
-  <md-dialog id="settings-dialog" class="settings-dialog">
-    <div slot="headline">Settings</div>
-    <div slot="content">
-      <md-list>
-        <md-list-item type="button" id="settings-check-update">
-          <md-icon slot="start">refresh</md-icon>
-          <div slot="headline">Check for updates</div>
-          <div slot="supporting-text">v${APP_VERSION}</div>
-        </md-list-item>
-        <md-list-item type="button" id="settings-changelog">
-          <md-icon slot="start">campaign</md-icon>
-          <div slot="headline">Changelog</div>
-        </md-list-item>
-        <md-list-item type="button" id="settings-refresh-all">
-          <md-icon slot="start">sync</md-icon>
-          <div slot="headline">Refresh all weather</div>
-          <div slot="supporting-text">re-fetch every saved location</div>
-        </md-list-item>
-        <md-list-item type="button" id="settings-share">
-          <md-icon slot="start">ios_share</md-icon>
-          <div slot="headline">Share app</div>
-        </md-list-item>
-        <md-list-item type="button" id="settings-other-apps">
-          <md-icon slot="start">apps</md-icon>
-          <div slot="headline">Other apps by me</div>
-        </md-list-item>
-        <md-list-item type="button" id="settings-github">
-          <md-icon slot="start">code</md-icon>
-          <div slot="headline">View source</div>
-          <div slot="supporting-text">github.com/zoop-dev/weather</div>
-        </md-list-item>
-        <md-list-item type="button" id="settings-clear-data">
-          <md-icon slot="start">delete_sweep</md-icon>
-          <div slot="headline">Clear all data</div>
-          <div slot="supporting-text">removes every saved location</div>
-        </md-list-item>
-      </md-list>
-    </div>
-    <div slot="actions">
-      <md-text-button id="settings-close">Close</md-text-button>
-    </div>
-  </md-dialog>
-
-  <md-dialog id="clear-data-confirm">
-    <div slot="headline">Clear all data?</div>
-    <div slot="content">this removes every saved location and resets the app. cant be undone.</div>
-    <div slot="actions">
-      <md-text-button id="clear-data-cancel">Cancel</md-text-button>
-      <md-text-button id="clear-data-confirm-btn">Clear</md-text-button>
-    </div>
-  </md-dialog>
 
   <div class="search-overlay" id="search-overlay">
     <div class="plain-search-row">
@@ -299,100 +247,53 @@ menuBtn.addEventListener('click', () => {
 locationsBackBtn.addEventListener('click', popOverlay)
 
 const settingsFab = document.querySelector('#settings-fab')
-const settingsDialog = document.querySelector('#settings-dialog')
 
-settingsFab.addEventListener('click', () => {
-  settingsDialog.show()
+const { dialog: settingsDialog } = initSettingsMenu({
+  version: APP_VERSION,
+  changelog: CHANGELOG,
+  shareData: { title: 'Weatherly', text: 'a weather app with no permissions needed', url: location.origin },
+  githubUrl: 'https://github.com/zoop-dev/weather',
+  onClearData: () => {
+    localStorage.clear()
+    window.location.reload()
+  },
+  clearDataMessage: 'This removes every saved location and resets the app. Can\'t be undone.',
+  renderFab: false,
+  extraItems: [
+    {
+      id: 'settings-refresh-all',
+      icon: 'sync',
+      headline: 'Refresh all weather',
+      supportingText: 're-fetch every saved location',
+      onClick: async () => {
+        const item = document.querySelector('#settings-refresh-all')
+        item.classList.add('spinning')
+        const locations = loadLocations()
+
+        await Promise.all(
+          locations.map(async (loc) => {
+            try {
+              const data = await fetchForecast(loc.place)
+              const payload = { place: loc.place, data, savedAt: Date.now() }
+              upsertLocation(payload)
+              if (currentPlace && placeKey(currentPlace) === placeKey(loc.place)) {
+                localStorage.setItem(LAST_KEY, JSON.stringify(payload))
+                render(payload)
+              }
+            } catch {
+              
+            }
+          })
+        )
+
+        item.classList.remove('spinning')
+        showToast(`refreshed ${locations.length} location${locations.length === 1 ? '' : 's'}`)
+      },
+    },
+  ],
 })
 
-document.querySelector('#settings-close').addEventListener('click', () => {
-  settingsDialog.close()
-})
-
-document.querySelector('#settings-check-update').addEventListener('click', async (e) => {
-  const item = e.currentTarget
-  item.classList.add('spinning')
-  let found = false
-  try {
-    found = await checkForUpdate()
-  } catch {
-    
-  }
-  setTimeout(() => item.classList.remove('spinning'), 600)
-  settingsDialog.close()
-  if (!found) showToast("you're on the latest version")
-})
-
-document.querySelector('#settings-changelog').addEventListener('click', () => {
-  settingsDialog.close()
-  showFullChangelog()
-})
-
-document.querySelector('#settings-refresh-all').addEventListener('click', async (e) => {
-  const item = e.currentTarget
-  item.classList.add('spinning')
-  const locations = loadLocations()
-
-  await Promise.all(
-    locations.map(async (loc) => {
-      try {
-        const data = await fetchForecast(loc.place)
-        const payload = { place: loc.place, data, savedAt: Date.now() }
-        upsertLocation(payload)
-        if (currentPlace && placeKey(currentPlace) === placeKey(loc.place)) {
-          localStorage.setItem(LAST_KEY, JSON.stringify(payload))
-          render(payload)
-        }
-      } catch {
-        
-      }
-    })
-  )
-
-  item.classList.remove('spinning')
-  settingsDialog.close()
-  showToast(`refreshed ${locations.length} location${locations.length === 1 ? '' : 's'}`)
-})
-
-document.querySelector('#settings-share').addEventListener('click', async () => {
-  const url = window.location.origin
-  if (navigator.share) {
-    try {
-      await navigator.share({ title: 'Weatherly', text: 'a weather app with no permissions needed', url })
-    } catch {
-      
-    }
-  } else {
-    await navigator.clipboard.writeText(url)
-    settingsDialog.close()
-    showToast('link copied')
-  }
-})
-
-document.querySelector('#settings-other-apps').addEventListener('click', () => {
-  settingsDialog.close()
-  showAppSwitcher()
-})
-
-document.querySelector('#settings-github').addEventListener('click', () => {
-  window.open('https://github.com/zoop-dev/weather', '_blank', 'noopener')
-})
-
-const clearDataConfirm = document.querySelector('#clear-data-confirm')
-
-document.querySelector('#settings-clear-data').addEventListener('click', () => {
-  settingsDialog.close()
-  clearDataConfirm.show()
-})
-
-document.querySelector('#clear-data-cancel').addEventListener('click', () => {
-  clearDataConfirm.close()
-})
-
-document.querySelector('#clear-data-confirm-btn').addEventListener('click', () => {
-  localStorage.clear()
-  window.location.reload()
-})
+settingsFab.addEventListener('click', () => settingsDialog.show())
 
 
 addLocationFab.addEventListener('click', () => {
