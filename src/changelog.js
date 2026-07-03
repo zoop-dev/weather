@@ -1,6 +1,11 @@
-export const APP_VERSION = '0.1.10'
+export const APP_VERSION = '0.1.11'
 
 export const CHANGELOG = [
+  {
+    version: '0.1.11',
+    date: '2026-07-03',
+    items: ['"other apps by me" now opens the zoop apps directory page instead of linking straight to taskly'],
+  },
   {
     version: '0.1.10',
     date: '2026-07-02',

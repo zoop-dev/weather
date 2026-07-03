@@ -371,7 +371,7 @@ document.querySelector('#settings-share').addEventListener('click', async () => 
 
 document.querySelector('#settings-other-apps').addEventListener('click', () => {
   settingsDialog.close()
-  showAppSwitcher('weatherly')
+  showAppSwitcher()
 })
 
 document.querySelector('#settings-github').addEventListener('click', () => {
