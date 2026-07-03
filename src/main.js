@@ -28,6 +28,7 @@ import { pushOverlay, popOverlay, replaceOverlay } from 'zoop-kit/back-nav.js'
 import { attachBootLoader, removeBootLoaderImmediately } from 'zoop-kit/boot-loader.js'
 import { showToast } from 'zoop-kit/toast.js'
 import { initSettingsMenu } from 'zoop-kit/settings-menu.js'
+import { maybeShowChangelog } from 'zoop-kit/changelog.js'
 
 const gated = initInstallGate({
   appName: 'Weatherly',
@@ -129,13 +130,6 @@ app.innerHTML = `
     <p class="search-attribution">Location results by Open-Meteo (CC BY 4.0) · GeoNames</p>
   </div>
 
-  <md-dialog id="changelog-dialog" class="changelog-dialog">
-    <div slot="headline">What's new</div>
-    <div slot="content" id="changelog-content"></div>
-    <div slot="actions">
-      <md-text-button id="changelog-close">Got it</md-text-button>
-    </div>
-  </md-dialog>
 `
 
 const contentEl = document.querySelector('#content')
@@ -174,62 +168,6 @@ function maybeShowOnboarding() {
   } else {
     onboardingEl.remove()
   }
-}
-
-function compareVersions(a, b) {
-  const pa = a.split('.').map(Number)
-  const pb = b.split('.').map(Number)
-  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
-    const diff = (pa[i] || 0) - (pb[i] || 0)
-    if (diff !== 0) return diff
-  }
-  return 0
-}
-
-function maybeShowChangelog() {
-  const lastSeen = localStorage.getItem(VERSION_KEY)
-  const isFirstRun = !localStorage.getItem(ONBOARDED_KEY) && loadLocations().length === 0
-
-  if (lastSeen === APP_VERSION || isFirstRun) {
-    localStorage.setItem(VERSION_KEY, APP_VERSION)
-    return
-  }
-
-  const entries = lastSeen
-    ? CHANGELOG.filter((c) => compareVersions(c.version, lastSeen) > 0)
-    : [CHANGELOG[0]]
-  showChangelogDialog(entries, () => localStorage.setItem(VERSION_KEY, APP_VERSION))
-}
-
-function showFullChangelog() {
-  showChangelogDialog(CHANGELOG)
-}
-
-function showChangelogDialog(entries, onClose) {
-  const contentEl = document.querySelector('#changelog-content')
-  contentEl.innerHTML = entries
-    .map(
-      (entry) => `
-        <div class="changelog-entry">
-          <div class="changelog-version">v${entry.version} <span>${entry.date}</span></div>
-          <md-list>
-            ${entry.items.map((item) => `<md-list-item>${item}</md-list-item>`).join('')}
-          </md-list>
-        </div>
-      `
-    )
-    .join('')
-
-  const dialog = document.querySelector('#changelog-dialog')
-  dialog.show()
-  document.querySelector('#changelog-close').addEventListener(
-    'click',
-    () => {
-      dialog.close()
-      if (onClose) onClose()
-    },
-    { once: true }
-  )
 }
 
 let debounceTimer = null
@@ -1118,7 +1056,12 @@ if (gated) {
 } else {
   loadLast()
   maybeShowOnboarding()
-  maybeShowChangelog()
+  maybeShowChangelog({
+    appVersion: APP_VERSION,
+    changelog: CHANGELOG,
+    versionKey: VERSION_KEY,
+    isFirstRun: !localStorage.getItem(ONBOARDED_KEY) && loadLocations().length === 0,
+  })
 
   initPullToRefresh(contentEl, async () => {
     if (!currentPlace) return

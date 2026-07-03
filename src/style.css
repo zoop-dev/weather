@@ -466,46 +466,9 @@ body {
 }
 
 
-.changelog-dialog {
-  --md-dialog-container-color: #0d1017;
-  --md-dialog-headline-color: var(--text);
-  --md-dialog-supporting-text-color: var(--muted);
-  --md-dialog-headline-font: var(--font-display);
-  --md-sys-color-primary: #4cc9ff;
-  font-family: var(--font-body);
-  color: var(--text);
-}
-
-.changelog-dialog md-list-item {
-  --md-list-item-label-text-font: var(--font-body);
-  --md-list-item-label-text-color: var(--text);
-}
-
 md-text-button {
   --md-text-button-label-text-font: var(--font-body);
-  --md-text-button-label-text-color: #4cc9ff;
-}
-
-.changelog-entry {
-  margin-bottom: 14px;
-}
-
-.changelog-version {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 0.95rem;
-  margin-bottom: 4px;
-}
-
-.changelog-version span {
-  font-weight: 400;
-  font-size: 0.75rem;
-  color: var(--muted);
-  margin-left: 6px;
-}
-
-.changelog-entry md-list {
-  --md-list-container-color: transparent;
+  --md-text-button-label-text-color: var(--accent);
 }
 
 .onboarding-cta {

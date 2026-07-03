@@ -1,6 +1,11 @@
-export const APP_VERSION = '0.1.12'
+export const APP_VERSION = '0.1.13'
 
 export const CHANGELOG = [
+  {
+    version: '0.1.13',
+    date: '2026-07-03',
+    items: ['no visible changes — changelog popup now uses the shared zoop-kit system instead of its own local copy'],
+  },
   {
     version: '0.1.12',
     date: '2026-07-03',
