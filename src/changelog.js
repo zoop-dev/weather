@@ -1,6 +1,11 @@
-export const APP_VERSION = '0.1.19'
+export const APP_VERSION = '0.1.20'
 
 export const CHANGELOG = [
+  {
+    version: '0.1.20',
+    date: '2026-07-04',
+    items: ['fixed the pull-to-refresh spinner freezing mid-spin instead of spinning continuously while refreshing'],
+  },
   {
     version: '0.1.19',
     date: '2026-07-03',

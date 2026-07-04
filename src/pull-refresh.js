@@ -51,10 +51,15 @@ export function initPullToRefresh(scrollEl, onRefresh) {
       refreshing = true
       indicator.style.transform = `translateX(-50%) translateY(${THRESHOLD}px)`
       indicator.classList.add('spinning')
-      spinner.removeAttribute('value')
+      
+      
+      
+      spinner.indeterminate = true
 
       Promise.resolve(onRefresh()).finally(() => {
         refreshing = false
+        spinner.indeterminate = false
+        spinner.value = 0
         indicator.classList.remove('spinning')
         indicator.style.transform = 'translateX(-50%) translateY(0)'
         indicator.style.opacity = '0'
