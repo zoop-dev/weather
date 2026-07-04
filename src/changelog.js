@@ -1,6 +1,11 @@
-export const APP_VERSION = '0.1.17'
+export const APP_VERSION = '0.1.18'
 
 export const CHANGELOG = [
+  {
+    version: '0.1.18',
+    date: '2026-07-03',
+    items: ['smoother scrolling with momentum on both mouse wheel and touch, powered by Lenis'],
+  },
   {
     version: '0.1.17',
     date: '2026-07-03',

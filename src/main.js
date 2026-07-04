@@ -14,6 +14,7 @@ import '@material/web/list/list-item.js'
 import '@material/web/button/text-button.js'
 import '@material/web/button/filled-button.js'
 import '@material/web/progress/circular-progress.js'
+import Lenis from 'lenis'
 import { describe, THEMES } from './weathercodes.js'
 import { weatherIcon } from './icons.js'
 import { initBackground, setBackgroundCondition } from './background.js'
@@ -1111,7 +1112,7 @@ if (gated) {
   attachBootLoader(() => {})
 
   initUpdateCheck()
-  initWheelScrollFallback()
+  initSmoothScroll()
 }
 
 
@@ -1120,111 +1121,20 @@ if (gated) {
 
 
 
-function initWheelScrollFallback() {
-  const maxScroll = () => document.documentElement.scrollHeight - window.innerHeight
-  const atEdge = (deltaY) => (deltaY < 0 && window.scrollY <= 0) || (deltaY > 0 && window.scrollY >= maxScroll())
+function initSmoothScroll() {
+  const lenis = new Lenis({
+    duration: 1.0,
+    touchMultiplier: 1.4,
+    
+    
+    syncTouch: true,
+    
+    
+  })
 
-  
-  
-  let target = null
-  let animating = false
-  function glideTo(delta) {
-    if (target == null) target = window.scrollY
-    target = Math.max(0, Math.min(maxScroll(), target + delta))
-    if (animating) return
-    animating = true
-    function tick() {
-      const cur = window.scrollY
-      const diff = target - cur
-      if (Math.abs(diff) < 0.5) {
-        window.scrollTo(0, target)
-        animating = false
-        target = null
-        return
-      }
-      window.scrollTo(0, cur + diff * 0.14)
-      requestAnimationFrame(tick)
-    }
-    requestAnimationFrame(tick)
+  function raf(time) {
+    lenis.raf(time)
+    requestAnimationFrame(raf)
   }
-
-  
-  let wheelBroken = false
-  window.addEventListener(
-    'wheel',
-    (e) => {
-      if (wheelBroken) {
-        glideTo(e.deltaY)
-        return
-      }
-      if (atEdge(e.deltaY)) return
-      const before = window.scrollY
-      requestAnimationFrame(() => {
-        if (window.scrollY === before) {
-          wheelBroken = true
-          glideTo(e.deltaY)
-        }
-      })
-    },
-    { passive: true }
-  )
-
-  
-  let touchBroken = false
-  let lastY = null
-  let velocity = 0
-  let momentumRaf = null
-
-  function runMomentum() {
-    if (Math.abs(velocity) < 0.4) {
-      momentumRaf = null
-      return
-    }
-    window.scrollBy(0, velocity)
-    velocity *= 0.975
-    momentumRaf = requestAnimationFrame(runMomentum)
-  }
-
-  window.addEventListener(
-    'touchstart',
-    (e) => {
-      lastY = e.touches[0].clientY
-      velocity = 0
-      if (momentumRaf) cancelAnimationFrame(momentumRaf)
-    },
-    { passive: true }
-  )
-
-  window.addEventListener(
-    'touchmove',
-    (e) => {
-      if (lastY == null) return
-      const y = e.touches[0].clientY
-      const delta = lastY - y
-      lastY = y
-      
-      
-      velocity = velocity * 0.7 + delta * 0.3
-
-      if (touchBroken) {
-        window.scrollBy(0, delta)
-        return
-      }
-      if (atEdge(delta) || delta === 0) return
-      const before = window.scrollY
-      requestAnimationFrame(() => {
-        if (window.scrollY === before) touchBroken = true
-      })
-    },
-    { passive: true }
-  )
-
-  window.addEventListener(
-    'touchend',
-    () => {
-      lastY = null
-      if (touchBroken && Math.abs(velocity) > 1) momentumRaf = requestAnimationFrame(runMomentum)
-    },
-    { passive: true }
-  )
+  requestAnimationFrame(raf)
 }

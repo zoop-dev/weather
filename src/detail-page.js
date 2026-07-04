@@ -148,6 +148,10 @@ function buildFrame() {
   el = document.createElement('div')
   el.id = 'detail-page'
   el.className = 'detail-page'
+  
+  
+  
+  el.setAttribute('data-lenis-prevent', '')
   el.innerHTML = `<div class="detail-track"></div>`
   document.body.appendChild(el)
 
