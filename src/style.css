@@ -125,7 +125,7 @@ body {
   z-index: 50;
   display: flex;
   flex-direction: column;
-  padding: max(18px, env(safe-area-inset-top)) 18px;
+  padding: max(18px, env(safe-area-inset-top)) 18px max(18px, env(safe-area-inset-bottom));
   opacity: 0;
   pointer-events: none;
   transform: scale(0.98);

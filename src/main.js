@@ -19,6 +19,7 @@ import { describe, THEMES } from './weathercodes.js'
 import { weatherIcon } from './icons.js'
 import { initBackground, setBackgroundCondition } from './background.js'
 import { scallopedClipPath } from './shapes.js'
+import { parseLocalDate } from './date-utils.js'
 import { initInstallGate } from 'zoop-kit/install-gate.js'
 import { initDesktopWarning } from 'zoop-kit/desktop-warning.js'
 import { initPullToRefresh } from './pull-refresh.js'
@@ -820,7 +821,7 @@ function aqiBarChart(values) {
 function renderDaily(data, mode = 'conditions') {
   const weekdayRow = data.daily.time
     .map((date, i) => {
-      const d = new Date(date)
+      const d = parseLocalDate(date)
       const label = i === 0 ? 'Today' : d.toLocaleDateString(undefined, { weekday: 'short' })
       return `<span>${label}</span>`
     })

@@ -3,6 +3,7 @@
 import { pushOverlay, popOverlay } from 'zoop-kit/back-nav.js'
 import { describe } from './weathercodes.js'
 import { weatherIcon } from './icons.js'
+import { parseLocalDate } from './date-utils.js'
 
 const ORDER = ['conditions', 'wind', 'air', 'uv', 'precipitation', 'humidity', 'pressure', 'visibility', 'sun']
 
@@ -215,7 +216,7 @@ function renderPane(index) {
 
   const daily = currentData.daily
   const dayLabels = daily.time.map((d, i) => {
-    const date = new Date(d)
+    const date = parseLocalDate(d)
     return {
       dow: i === 0 ? 'Today' : date.toLocaleDateString(undefined, { weekday: 'short' }),
       num: date.getDate(),
@@ -479,7 +480,7 @@ function renderOverview() {
   const el = document.querySelector('#day-overview')
   const daily = currentData.daily
   const dayLabels = daily.time.map((d, i) => {
-    const date = new Date(d)
+    const date = parseLocalDate(d)
     return {
       dow: i === 0 ? 'Today' : date.toLocaleDateString(undefined, { weekday: 'short' }),
       num: date.getDate(),
@@ -494,7 +495,7 @@ function renderOverview() {
     <div class="detail-track">
       <div class="detail-header">
         <md-icon-button id="overview-back" aria-label="Back"><md-icon>arrow_back</md-icon></md-icon-button>
-        <p class="detail-title">${new Date(daily.time[currentDayIndex]).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+        <p class="detail-title">${parseLocalDate(daily.time[currentDayIndex]).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</p>
         <span class="overlay-spacer"></span>
       </div>
       <div class="detail-daytabs">

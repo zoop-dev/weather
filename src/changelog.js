@@ -1,6 +1,14 @@
-export const APP_VERSION = '0.1.20'
+export const APP_VERSION = '0.1.21'
 
 export const CHANGELOG = [
+  {
+    version: '0.1.21',
+    date: '2026-07-04',
+    items: [
+      'fixed the daily forecast weekday/date labels being off by one day',
+      'fixed the location search overlay having too much bottom padding on notched phones',
+    ],
+  },
   {
     version: '0.1.20',
     date: '2026-07-04',
