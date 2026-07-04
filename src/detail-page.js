@@ -470,6 +470,7 @@ function buildOverviewFrame() {
   el = document.createElement('div')
   el.id = 'day-overview'
   el.className = 'detail-page'
+  el.setAttribute('data-lenis-prevent', '')
   document.body.appendChild(el)
   return el
 }

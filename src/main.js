@@ -23,7 +23,12 @@ import { initInstallGate } from 'zoop-kit/install-gate.js'
 import { initDesktopWarning } from 'zoop-kit/desktop-warning.js'
 import { initPullToRefresh } from './pull-refresh.js'
 import { initUpdateCheck } from 'zoop-kit/update-check.js'
-import { openDetailPage, openDayOverview } from './detail-page.js'
+
+
+let detailPageModule = null
+function loadDetailPage() {
+  return (detailPageModule ??= import('./detail-page.js'))
+}
 import { APP_VERSION, CHANGELOG } from './changelog.js'
 import { pushOverlay, popOverlay, replaceOverlay } from 'zoop-kit/back-nav.js'
 import { attachBootLoader, removeBootLoaderImmediately } from 'zoop-kit/boot-loader.js'
@@ -101,7 +106,7 @@ app.innerHTML = `
     </md-filled-button>
   </div>
 
-  <div class="search-overlay" id="locations-overlay">
+  <div class="search-overlay" id="locations-overlay" data-lenis-prevent>
     <div class="overlay-header">
       <md-icon-button id="locations-back" type="button" aria-label="Back">
         <md-icon>arrow_back</md-icon>
@@ -118,7 +123,7 @@ app.innerHTML = `
     </md-fab>
   </div>
 
-  <div class="search-overlay" id="search-overlay">
+  <div class="search-overlay" id="search-overlay" data-lenis-prevent>
     <div class="plain-search-row">
       <md-icon>search</md-icon>
       <input id="search-input" type="text" placeholder="Search for a location…" autocomplete="off" />
@@ -521,6 +526,7 @@ function showErrorScreen(title, subtitle, onRetry) {
     el = document.createElement('div')
     el.id = 'error-screen'
     el.className = 'error-screen'
+    el.setAttribute('data-lenis-prevent', '')
     document.body.appendChild(el)
   }
   el.innerHTML = `
@@ -649,13 +655,15 @@ function wireTabs() {
 
   contentEl.querySelectorAll('.dgrid [data-metric]').forEach((card) => {
     card.style.cursor = 'pointer'
-    card.addEventListener('click', () => {
+    card.addEventListener('click', async () => {
+      const { openDetailPage } = await loadDetailPage()
       openDetailPage(card.dataset.metric, currentData)
     })
   })
 
   contentEl.querySelectorAll('.daily-click-cell').forEach((cell) => {
-    cell.addEventListener('click', () => {
+    cell.addEventListener('click', async () => {
+      const { openDayOverview } = await loadDetailPage()
       openDayOverview(currentData, Number(cell.dataset.day))
     })
   })

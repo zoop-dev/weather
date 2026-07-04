@@ -1,6 +1,14 @@
-export const APP_VERSION = '0.1.18'
+export const APP_VERSION = '0.1.19'
 
 export const CHANGELOG = [
+  {
+    version: '0.1.19',
+    date: '2026-07-03',
+    items: [
+      'fixed being unable to scroll inside dialogs (changelog, license, theme picker) and some overlays',
+      'you can now skip straight past the install screen with a "continue without installing" link',
+    ],
+  },
   {
     version: '0.1.18',
     date: '2026-07-03',
