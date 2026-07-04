@@ -1611,6 +1611,59 @@ md-text-button {
   color: #ffb4ab;
 }
 
+.error-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 6px;
+  padding: 32px 28px max(32px, env(safe-area-inset-bottom));
+  background: #05060a;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.error-screen.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.error-screen-icon {
+  font-size: 44px;
+  width: 44px;
+  height: 44px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.error-screen-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--text);
+  margin: 0;
+}
+
+.error-screen-sub {
+  color: var(--muted);
+  font-size: 0.88rem;
+  max-width: 280px;
+  margin: 0 0 14px;
+}
+
+.error-screen-retry {
+  --md-filled-button-container-color: var(--accent);
+  --md-filled-button-label-text-color: var(--accent-on);
+  --md-filled-button-label-text-font: var(--font-body);
+  --md-filled-button-label-text-weight: 700;
+  --md-filled-button-container-shape: 999px;
+}
+
 .cached-tag {
   display: inline-flex;
   align-items: center;

@@ -1,6 +1,19 @@
-export const APP_VERSION = '0.1.15'
+export const APP_VERSION = '0.1.17'
 
 export const CHANGELOG = [
+  {
+    version: '0.1.17',
+    date: '2026-07-03',
+    items: [
+      'fixed scrolling not working at all for some users (mouse wheel and touch drag) — now self-corrects and adds smooth momentum if the normal scroll path fails',
+      'fixed the location name still showing "Loading…" if the weather service failed to load',
+    ],
+  },
+  {
+    version: '0.1.16',
+    date: '2026-07-03',
+    items: ["added a proper full-screen error page (icon, message, retry button) for when the weather service can't be reached, instead of plain error text"],
+  },
   {
     version: '0.1.15',
     date: '2026-07-03',

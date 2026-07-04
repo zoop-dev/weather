@@ -352,7 +352,10 @@ async function selectPlace(place) {
     if (raw) {
       render(JSON.parse(raw), true)
     } else {
-      showStatus("Couldn't reach the weather service.", true)
+      locUpdated.textContent = ''
+      showErrorScreen("Couldn't reach the weather service", "Check your connection and try again — it's probably just temporary.", () =>
+        selectPlace(place)
+      )
     }
   }
 }
@@ -511,6 +514,34 @@ function showStatus(msg, isError = false) {
   contentEl.innerHTML = `<div class="status${isError ? ' error' : ''}">${msg}</div>`
 }
 
+function showErrorScreen(title, subtitle, onRetry) {
+  let el = document.querySelector('#error-screen')
+  if (!el) {
+    el = document.createElement('div')
+    el.id = 'error-screen'
+    el.className = 'error-screen'
+    document.body.appendChild(el)
+  }
+  el.innerHTML = `
+    <md-icon class="error-screen-icon">cloud_off</md-icon>
+    <p class="error-screen-title">${title}</p>
+    <p class="error-screen-sub">${subtitle}</p>
+    <md-filled-button type="button" class="error-screen-retry">
+      Try again
+      <md-icon slot="icon">refresh</md-icon>
+    </md-filled-button>
+  `
+  el.querySelector('.error-screen-retry').addEventListener('click', () => {
+    hideErrorScreen()
+    onRetry()
+  })
+  requestAnimationFrame(() => el.classList.add('open'))
+}
+
+function hideErrorScreen() {
+  document.querySelector('#error-screen')?.classList.remove('open')
+}
+
 function applyTheme(iconKey) {
   const [grad, accent] = THEMES[iconKey] ?? THEMES.cloudy
   document.documentElement.style.setProperty('--grad', grad)
@@ -519,6 +550,7 @@ function applyTheme(iconKey) {
 }
 
 function render({ place, data, savedAt }, cached = false) {
+  hideErrorScreen()
   const cur = data.current
   const { icon, label } = describe(cur.weather_code, cur.is_day)
   applyTheme(icon)
@@ -1079,4 +1111,120 @@ if (gated) {
   attachBootLoader(() => {})
 
   initUpdateCheck()
+  initWheelScrollFallback()
+}
+
+
+
+
+
+
+
+function initWheelScrollFallback() {
+  const maxScroll = () => document.documentElement.scrollHeight - window.innerHeight
+  const atEdge = (deltaY) => (deltaY < 0 && window.scrollY <= 0) || (deltaY > 0 && window.scrollY >= maxScroll())
+
+  
+  
+  let target = null
+  let animating = false
+  function glideTo(delta) {
+    if (target == null) target = window.scrollY
+    target = Math.max(0, Math.min(maxScroll(), target + delta))
+    if (animating) return
+    animating = true
+    function tick() {
+      const cur = window.scrollY
+      const diff = target - cur
+      if (Math.abs(diff) < 0.5) {
+        window.scrollTo(0, target)
+        animating = false
+        target = null
+        return
+      }
+      window.scrollTo(0, cur + diff * 0.14)
+      requestAnimationFrame(tick)
+    }
+    requestAnimationFrame(tick)
+  }
+
+  
+  let wheelBroken = false
+  window.addEventListener(
+    'wheel',
+    (e) => {
+      if (wheelBroken) {
+        glideTo(e.deltaY)
+        return
+      }
+      if (atEdge(e.deltaY)) return
+      const before = window.scrollY
+      requestAnimationFrame(() => {
+        if (window.scrollY === before) {
+          wheelBroken = true
+          glideTo(e.deltaY)
+        }
+      })
+    },
+    { passive: true }
+  )
+
+  
+  let touchBroken = false
+  let lastY = null
+  let velocity = 0
+  let momentumRaf = null
+
+  function runMomentum() {
+    if (Math.abs(velocity) < 0.4) {
+      momentumRaf = null
+      return
+    }
+    window.scrollBy(0, velocity)
+    velocity *= 0.975
+    momentumRaf = requestAnimationFrame(runMomentum)
+  }
+
+  window.addEventListener(
+    'touchstart',
+    (e) => {
+      lastY = e.touches[0].clientY
+      velocity = 0
+      if (momentumRaf) cancelAnimationFrame(momentumRaf)
+    },
+    { passive: true }
+  )
+
+  window.addEventListener(
+    'touchmove',
+    (e) => {
+      if (lastY == null) return
+      const y = e.touches[0].clientY
+      const delta = lastY - y
+      lastY = y
+      
+      
+      velocity = velocity * 0.7 + delta * 0.3
+
+      if (touchBroken) {
+        window.scrollBy(0, delta)
+        return
+      }
+      if (atEdge(delta) || delta === 0) return
+      const before = window.scrollY
+      requestAnimationFrame(() => {
+        if (window.scrollY === before) touchBroken = true
+      })
+    },
+    { passive: true }
+  )
+
+  window.addEventListener(
+    'touchend',
+    () => {
+      lastY = null
+      if (touchBroken && Math.abs(velocity) > 1) momentumRaf = requestAnimationFrame(runMomentum)
+    },
+    { passive: true }
+  )
 }
